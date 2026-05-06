@@ -1,6 +1,12 @@
-// app.js - Human Design Soulbound Blueprint dApp (Rich Dashboard v2)
+// app.js - Human Design Soulbound Blueprint dApp (Visual Planetary Sides)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
+
+const planetSymbols = {
+  Sun: "☉", Moon: "☽", North_Node: "☊", South_Node: "☋",
+  Mercury: "☿", Venus: "♀", Mars: "♂", Jupiter: "♃",
+  Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
+};
 
 document.getElementById("generateBtn").onclick = async () => {
   const btn = document.getElementById("generateBtn");
@@ -30,7 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Basic table
+    // Basic info table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -42,7 +48,8 @@ document.getElementById("generateBtn").onclick = async () => {
 
     document.getElementById("bodygraph").src = imageUrl;
 
-    // RICH DASHBOARD (adapted to real JSON structure)
+    // Render visual planetary sides + rich dashboard
+    renderPlanetarySides(data);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -58,60 +65,69 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
+function renderPlanetarySides(data) {
+  let leftHTML = `<h3 style="color:#ff6666">Design Side (Red)</h3>`;
+  let rightHTML = `<h3 style="color:#6666ff">Personality Side (Black)</h3>`;
+
+  // Design (left)
+  (data.gates?.des?.Planets || []).forEach(p => {
+    const sym = planetSymbols[p.Planet] || "⚪";
+    leftHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
+      <span style="font-size:22px;">${sym}</span>
+      <strong>${p.Planet}</strong>
+      <span>Gate ${p.Gate} • Line ${p.Line} • C${p.Color} T${p.Tone} B${p.Base}</span>
+    </div>`;
+  });
+
+  // Personality (right)
+  (data.gates?.prs?.Planets || []).forEach(p => {
+    const sym = planetSymbols[p.Planet] || "⚪";
+    rightHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
+      <span style="font-size:22px;">${sym}</span>
+      <strong>${p.Planet}</strong>
+      <span>Gate ${p.Gate} • Line ${p.Line} • C${p.Color} T${p.Tone} B${p.Base}</span>
+    </div>`;
+  });
+
+  document.getElementById("planetarySides").innerHTML = `
+    <div style="display:flex; gap:30px; margin:30px 0;">
+      <div style="flex:1;">${leftHTML}</div>
+      <div style="flex:2; text-align:center;"><img id="bodygraph" alt="BodyGraph" style="max-width:100%; border-radius:16px;"></div>
+      <div style="flex:1;">${rightHTML}</div>
+    </div>
+  `;
+}
+
 function renderRichDashboard(data) {
+  // (keeps the expandable sections you already have)
   let html = "";
 
-  // 1. Planetary Activations (Personality + Design)
-  if (data.gates) {
-    html += `<h3>🌍 Planetary Activations</h3>`;
-
-    // Personality Side
-    html += `<details open><summary>Personality Side (Black)</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
-    (data.gates.prs?.Planets || []).forEach(p => {
-      html += `<tr><td>${p.Planet}</td><td>${p.Gate}</td><td>${p.Line}</td><td>${p.Color}</td><td>${p.Tone}</td><td>${p.Base}</td></tr>`;
-    });
-    html += `</tbody></table></details>`;
-
-    // Design Side
-    html += `<details open><summary>Design Side (Red)</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
-    (data.gates.des?.Planets || []).forEach(p => {
-      html += `<tr><td>${p.Planet}</td><td>${p.Gate}</td><td>${p.Line}</td><td>${p.Color}</td><td>${p.Tone}</td><td>${p.Base}</td></tr>`;
-    });
-    html += `</tbody></table></details>`;
-  }
-
-  // 2. Channels
   if (data.channels?.Channels?.length) {
     html += `<h3>🔗 Channels</h3><ul>`;
-    data.channels.Channels.forEach(ch => {
-      html += `<li>${ch.channel}</li>`;
-    });
+    data.channels.Channels.forEach(ch => html += `<li>${ch.channel}</li>`);
     html += `</ul>`;
   }
 
-  // 3. Centers
   if (data.general) {
-    html += `<h3>⚪ Centers</h3>`;
-    html += `<details open><summary>Defined Centers</summary><ul>`;
+    html += `<h3>⚪ Centers</h3>
+      <details open><summary>Defined</summary><ul>`;
     (data.general.defined_centers || []).forEach(c => html += `<li>${c}</li>`);
-    html += `</ul></details>`;
-    html += `<details open><summary>Undefined / Open Centers</summary><ul>`;
+    html += `</ul></details>
+      <details open><summary>Undefined / Open</summary><ul>`;
     (data.general.undefined_centers || []).forEach(c => html += `<li>${c}</li>`);
     html += `</ul></details>`;
   }
 
-  // 4. Variables & Arrows
   if (data.general?.variables) {
     html += `<h3>➳ Variables & Arrows</h3><pre>${JSON.stringify(data.general.variables, null, 2)}</pre>`;
   }
 
-  // 5. Full Raw JSON (already working)
   html += `<h3>📋 Full Raw JSON</h3><details><summary>View complete data</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
 
   document.getElementById("richDashboard").innerHTML = html;
 }
 
-// Download buttons
+// Download buttons (unchanged)
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
@@ -132,7 +148,6 @@ document.getElementById("downloadJsonBtn").onclick = () => {
   URL.revokeObjectURL(url);
 };
 
-// Mint button (still placeholder)
 document.getElementById("mintBtn").onclick = () => {
-  alert("✨ Soulbound NFT minting is ready for the next step!");
+  alert("✨ Soulbound NFT minting ready for the next step!");
 };
