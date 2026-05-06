@@ -7,7 +7,7 @@
   <style>
     :root { --bg: #0a0a0a; --card: #1a1a1a; --accent: #00ffaa; --text: #f0f0f0; }
     body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; margin: 0; }
-    .container { max-width: 900px; margin: 0 auto; }
+    .container { max-width: 1100px; margin: 0 auto; }
     h1 { text-align: center; font-size: 2.8rem; margin-bottom: 8px; }
     .subtitle { text-align: center; color: #888; margin-bottom: 40px; }
     .card { background: var(--card); padding: 28px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 24px; }
@@ -24,6 +24,9 @@
     details { margin: 15px 0; }
     summary { font-weight: bold; cursor: pointer; }
     pre { background: #111; padding: 15px; border-radius: 12px; overflow-x: auto; font-size: 13px; }
+    .planetary-container { display: flex; gap: 30px; align-items: flex-start; margin: 30px 0; }
+    .planetary-side { flex: 1; }
+    .planetary-side h3 { margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -46,11 +49,10 @@
         <tbody></tbody>
       </table>
 
-      <div id="bodygraphContainer" style="text-align:center; margin:20px 0;">
-        <img id="bodygraph" alt="Your BodyGraph" style="max-width:100%; border-radius:16px;">
-      </div>
+      <!-- Planetary Sides + BodyGraph -->
+      <div id="planetarySides" class="planetary-container"></div>
 
-      <!-- RICH DASHBOARD -->
+      <!-- Rich Dashboard -->
       <div id="richDashboard"></div>
 
       <div class="buttons">
