@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Clean Humdes-style Planetary Display)
+// app.js - Human Design Soulbound Blueprint dApp (Final Compact & Clean Planetary Display)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -36,7 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Basic info table
+    // Basic table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -46,7 +46,7 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderCleanPlanetarySides(data, imageUrl);
+    renderCompactPlanetarySides(data, imageUrl);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -62,39 +62,24 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderCleanPlanetarySides(data, imageUrl) {
+function renderCompactPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:24px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:24px;">PERSONALITY</h3>`;
 
-  // Design Side (left)
-  (data.gates?.des?.Planets || []).forEach(p => {
+  const createRow = (p) => {
     const sym = planetSymbols[p.Planet] || "⚪";
-    leftHTML += `
+    return `
       <div class="planet-row">
         <span class="symbol">${sym}</span>
         <strong>${p.Planet}</strong>
         <span class="activation">${p.Gate}.${p.Line}</span>
-        <button class="toggle-btn" onclick="this.parentElement.classList.toggle('expanded')">+</button>
-        <div class="ctb">
-          C${p.Color} • T${p.Tone} • B${p.Base}
-        </div>
+        <button class="small-plus" onclick="this.parentElement.classList.toggle('expanded')">+</button>
+        <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
       </div>`;
-  });
+  };
 
-  // Personality Side (right)
-  (data.gates?.prs?.Planets || []).forEach(p => {
-    const sym = planetSymbols[p.Planet] || "⚪";
-    rightHTML += `
-      <div class="planet-row">
-        <span class="symbol">${sym}</span>
-        <strong>${p.Planet}</strong>
-        <span class="activation">${p.Gate}.${p.Line}</span>
-        <button class="toggle-btn" onclick="this.parentElement.classList.toggle('expanded')">+</button>
-        <div class="ctb">
-          C${p.Color} • T${p.Tone} • B${p.Base}
-        </div>
-      </div>`;
-  });
+  (data.gates?.des?.Planets || []).forEach(p => leftHTML += createRow(p));
+  (data.gates?.prs?.Planets || []).forEach(p => rightHTML += createRow(p));
 
   document.getElementById("planetarySides").innerHTML = `
     <div style="display:flex; gap:40px; align-items:flex-start;">
