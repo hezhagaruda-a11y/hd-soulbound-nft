@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌌 Human Design Blueprint • Soulbound NFT</title>
-  <script type="module" src="app.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #1a1a1a; --accent: #00ffaa; --text: #f0f0f0; }
     body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; margin: 0; }
@@ -18,9 +17,10 @@
     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
     th { background: #222; }
-    #result { display: none; }
-    #bodygraph { max-width: 100%; border-radius: 16px; margin: 20px 0; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .download-btn { background: #333; color: white; margin-top: 8px; }
+    img { max-width: 100%; border-radius: 16px; background: #111; padding: 10px; }
+    .result { display: none; }
+    .buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .buttons button { flex: 1; }
   </style>
 </head>
 <body>
@@ -29,36 +29,31 @@
     <p class="subtitle">Enter your birth data → Generate your full chart → Download & Mint as Soulbound NFT</p>
 
     <div class="card">
-      <input id="date" type="date" required>
-      <input id="time" type="time" value="12:00" required>
-      <input id="place" type="text" placeholder="Birth Place (e.g. New York, USA)" required>
+      <input type="date" id="birthDate" value="1983-08-09">
+      <input type="time" id="birthTime" value="16:44">
+      <input type="text" id="birthPlace" placeholder="Birth place (e.g. Sulaymaniyah)" value="Sulaymaniyah">
       <button id="generateBtn">Generate Human Design Chart</button>
     </div>
 
-    <div id="result" class="card">
+    <div id="result" class="card result">
       <h2>Your Human Design Blueprint</h2>
-      
-      <!-- Beautiful Table -->
       <table id="hdTable">
-        <thead>
-          <tr><th>Key</th><th>Value</th></tr>
-        </thead>
+        <thead><tr><th>Key</th><th>Value</th></tr></thead>
         <tbody></tbody>
       </table>
 
-      <!-- BodyGraph Image -->
-      <img id="bodygraph" src="" alt="Your BodyGraph">
+      <div id="bodygraphContainer" style="text-align:center; margin:20px 0;">
+        <img id="bodygraph" alt="Your BodyGraph" style="max-width:100%; border-radius:16px;">
+      </div>
 
-      <div style="display:flex; gap:12px; margin-top:20px;">
-        <button id="downloadImageBtn" class="download-btn">⬇️ Download BodyGraph PNG</button>
-        <button id="downloadJsonBtn" class="download-btn">⬇️ Download Full Data (JSON)</button>
+      <div class="buttons">
+        <button id="downloadImageBtn">⬇️ Download BodyGraph PNG</button>
+        <button id="downloadJsonBtn">⬇️ Download Full Data (JSON)</button>
         <button id="mintBtn">✨ Mint as Soulbound NFT</button>
       </div>
     </div>
-
-    <p style="text-align:center; color:#555; font-size:13px; margin-top:40px;">
-      Powered by Swiss Ephemeris • Running in your private Codespace • Your energy, forever yours
-    </p>
   </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
