@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (6-Line Dashboard)
+// app.js - Human Design Soulbound Blueprint dApp (6-Line Dashboard - Final)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -36,7 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Basic table
+    // Basic info table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -46,7 +46,13 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderCompactPlanetarySides(data, imageUrl);
+    // BodyGraph as independent central hero
+    document.getElementById("bodygraph").src = imageUrl;
+
+    // Planetary sides in Line 1
+    renderCompactPlanetarySides(data);
+
+    // 6-Line Dashboard
     render6LevelDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -62,7 +68,7 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderCompactPlanetarySides(data, imageUrl) {
+function renderCompactPlanetarySides(data) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:20px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:20px;">PERSONALITY</h3>`;
 
@@ -95,13 +101,11 @@ function renderCompactPlanetarySides(data, imageUrl) {
   document.getElementById("planetarySides").innerHTML = `
     <div style="display:flex; gap:24px; align-items:flex-start;">
       <div style="flex:1;">${leftHTML}</div>
-      <div style="flex:2; text-align:center;">
-        <img src="${imageUrl}" alt="BodyGraph" style="max-width:100%; border-radius:24px; background:#111; padding:20px; box-shadow:0 20px 40px rgba(0,0,0,0.7);">
-      </div>
       <div style="flex:1;">${rightHTML}</div>
     </div>
   `;
 
+  // Activate + buttons
   setTimeout(() => {
     document.querySelectorAll('.planet-row').forEach(row => {
       const plusBtn = row.querySelector('.small-plus');
@@ -117,44 +121,51 @@ function renderCompactPlanetarySides(data, imageUrl) {
       }
     });
   }, 100);
-};
+}
 
 function render6LevelDashboard(data) {
-  const levels = [
-    { title: "Line 1 — Foundation", content: `
-      <strong>Type:</strong> ${data.general?.energy_type}<br>
-      <strong>Strategy:</strong> ${data.general?.strategy}<br>
-      <strong>Authority:</strong> ${data.general?.inner_authority}<br>
-      <strong>Profile:</strong> ${data.general?.profile}<br>
-      <strong>Cross:</strong> ${data.general?.inc_cross}
-    `},
-    { title: "Line 2 — Planetary Blueprint", content: "Planetary activations shown in the sides above" },
-    { title: "Line 3 — Energy Centers", content: `
-      Defined: ${(data.general?.defined_centers || []).join(", ")}<br>
-      Open: ${(data.general?.undefined_centers || []).join(", ")}
-    `},
-    { title: "Line 4 — Channels & Flow", content: (data.channels?.Channels || []).map(ch => ch.channel).join("<br>") },
-    { title: "Line 5 — Variables & Arrows", content: `<pre>${JSON.stringify(data.general?.variables || {}, null, 2)}</pre>` },
-    { title: "Line 6 — Higher Purpose & NFT Utility", content: `
-      <strong>Incarnation Cross Role:</strong> ${data.general?.inc_cross}<br>
-      <strong>Soulbound NFT:</strong> Ready to mint<br>
-      <em>This blueprint is yours forever.</em>
-    `}
-  ];
+  const pentaGates = [15,5,46,29,14,2,1,8,7,31,13,33];
 
-  let html = "";
-  levels.forEach(level => {
-    html += `
-      <div class="level-card">
-        <div class="level-header">${level.title}</div>
-        <div>${level.content}</div>
-      </div>`;
-  });
+  let html = `
+    <div class="level-card">
+      <div class="level-header">Line 1 — Foundation</div>
+      <div>Planetary activations shown in the sides above</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-header">Line 2 — Defined Centers & Gate Activations</div>
+      <div>Defined: ${(data.general?.defined_centers || []).join(", ")}</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-header">Line 3 — Open Centers & Gate Activations</div>
+      <div>Open: ${(data.general?.undefined_centers || []).join(", ")}</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-header">Line 4 — Channels & Circuitry</div>
+      <ul>${(data.channels?.Channels || []).map(ch => `<li>${ch.channel}</li>`).join("")}</ul>
+    </div>
+
+    <div class="level-card">
+      <div class="level-header">Line 5 — Penta Gate Score</div>
+      <div>Penta gates present: ${pentaGates.filter(g => 
+        (data.gates?.prs?.Planets || []).some(p => p.Gate === g) || 
+        (data.gates?.des?.Planets || []).some(p => p.Gate === g)
+      ).join(", ") || "None"}</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-header">Line 6 — Higher Purpose & NFT Utility</div>
+      <div><strong>Incarnation Cross Role:</strong> ${data.general?.inc_cross || "—"}</div>
+      <div><strong>Soulbound NFT:</strong> Ready to mint<br><em>This blueprint is yours forever.</em></div>
+    </div>
+  `;
 
   document.getElementById("dashboardLevels").innerHTML = html;
 }
 
-// Download buttons (unchanged)
+// Download buttons
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
