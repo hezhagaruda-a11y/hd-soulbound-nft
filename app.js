@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Clean Compact Planetary Display - Fixed)
+// app.js - Human Design Soulbound Blueprint dApp (Final Clean Compact Layout)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -46,7 +46,7 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderCompactPlanetarySides(data, imageUrl);
+    renderCleanPlanetarySides(data, imageUrl);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -62,24 +62,29 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderCompactPlanetarySides(data, imageUrl) {
+function renderCleanPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:24px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:24px;">PERSONALITY</h3>`;
 
-  const createRow = (p) => {
+  const createRow = (p, isDesign) => {
     const sym = planetSymbols[p.Planet] || "⚪";
+    const symbolPart = isDesign 
+      ? `<span style="margin-left:auto; font-size:28px;">${sym}</span>` 
+      : `<span style="font-size:28px;">${sym}</span>`;
+
     return `
       <div class="planet-row">
-        <span class="symbol">${sym}</span>
+        ${isDesign ? '' : symbolPart}
         <strong>${p.Planet}</strong>
         <span class="activation">${p.Gate}.${p.Line}</span>
+        ${isDesign ? symbolPart : ''}
         <button class="small-plus">+</button>
         <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
       </div>`;
   };
 
-  (data.gates?.des?.Planets || []).forEach(p => leftHTML += createRow(p));
-  (data.gates?.prs?.Planets || []).forEach(p => rightHTML += createRow(p));
+  (data.gates?.des?.Planets || []).forEach(p => leftHTML += createRow(p, true));
+  (data.gates?.prs?.Planets || []).forEach(p => rightHTML += createRow(p, false));
 
   document.getElementById("planetarySides").innerHTML = `
     <div style="display:flex; gap:40px; align-items:flex-start;">
@@ -103,7 +108,6 @@ function renderCompactPlanetarySides(data, imageUrl) {
           ctb.style.display = isHidden ? 'block' : 'none';
           plusBtn.textContent = isHidden ? '–' : '+';
         };
-        // Start hidden
         ctb.style.display = 'none';
       }
     });
