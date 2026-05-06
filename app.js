@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Rich Dashboard Version)
+// app.js - Human Design Soulbound Blueprint dApp (Rich Dashboard v2)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -17,14 +17,12 @@ document.getElementById("generateBtn").onclick = async () => {
   const params = new URLSearchParams({ year, month, day, hour, minute, place });
 
   try {
-    // 1. Get full blueprint data
     const res = await fetch(`${BACKEND_URL}/calculate?${params}`, {
       headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
     });
     if (!res.ok) throw new Error("Failed to calculate chart");
     const data = await res.json();
 
-    // 2. Get BodyGraph image
     const imgRes = await fetch(`${BACKEND_URL}/bodygraph?${params}`, {
       headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
     });
@@ -32,7 +30,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Populate basic table
+    // Basic table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -42,17 +40,15 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    // Show BodyGraph
     document.getElementById("bodygraph").src = imageUrl;
 
-    // === RICH DASHBOARD SECTIONS ===
+    // RICH DASHBOARD (adapted to real JSON structure)
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
     window.currentData = data;
     window.currentImageUrl = imageUrl;
 
-    console.log("✅ Full rich blueprint loaded");
   } catch (e) {
     console.error(e);
     alert("Error: " + e.message);
@@ -65,50 +61,57 @@ document.getElementById("generateBtn").onclick = async () => {
 function renderRichDashboard(data) {
   let html = "";
 
-  // 1. Planetary Activations
-  if (data.planets) {
+  // 1. Planetary Activations (Personality + Design)
+  if (data.gates) {
     html += `<h3>🌍 Planetary Activations</h3>`;
-    html += `<details open><summary>Personality Side</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
-    Object.entries(data.planets.personality || {}).forEach(([planet, p]) => {
-      html += `<tr><td>${planet}</td><td>${p.gate || "—"}</td><td>${p.line || "—"}</td><td>${p.color || "—"}</td><td>${p.tone || "—"}</td><td>${p.base || "—"}</td></tr>`;
+
+    // Personality Side
+    html += `<details open><summary>Personality Side (Black)</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
+    (data.gates.prs?.Planets || []).forEach(p => {
+      html += `<tr><td>${p.Planet}</td><td>${p.Gate}</td><td>${p.Line}</td><td>${p.Color}</td><td>${p.Tone}</td><td>${p.Base}</td></tr>`;
     });
     html += `</tbody></table></details>`;
 
-    html += `<details open><summary>Design Side</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
-    Object.entries(data.planets.design || {}).forEach(([planet, p]) => {
-      html += `<tr><td>${planet}</td><td>${p.gate || "—"}</td><td>${p.line || "—"}</td><td>${p.color || "—"}</td><td>${p.tone || "—"}</td><td>${p.base || "—"}</td></tr>`;
+    // Design Side
+    html += `<details open><summary>Design Side (Red)</summary><table><thead><tr><th>Planet</th><th>Gate</th><th>Line</th><th>Color</th><th>Tone</th><th>Base</th></tr></thead><tbody>`;
+    (data.gates.des?.Planets || []).forEach(p => {
+      html += `<tr><td>${p.Planet}</td><td>${p.Gate}</td><td>${p.Line}</td><td>${p.Color}</td><td>${p.Tone}</td><td>${p.Base}</td></tr>`;
     });
     html += `</tbody></table></details>`;
   }
 
   // 2. Channels
-  if (data.channels && data.channels.length) {
+  if (data.channels?.Channels?.length) {
     html += `<h3>🔗 Channels</h3><ul>`;
-    data.channels.forEach(ch => html += `<li>${ch}</li>`);
+    data.channels.Channels.forEach(ch => {
+      html += `<li>${ch.channel}</li>`;
+    });
     html += `</ul>`;
   }
 
   // 3. Centers
-  if (data.centers) {
-    html += `<h3>⚪ Centers</h3><details open><summary>Defined</summary><ul>`;
-    (data.centers.defined || []).forEach(c => html += `<li>${c}</li>`);
-    html += `</ul></details><details open><summary>Undefined / Open</summary><ul>`;
-    (data.centers.undefined || []).forEach(c => html += `<li>${c}</li>`);
+  if (data.general) {
+    html += `<h3>⚪ Centers</h3>`;
+    html += `<details open><summary>Defined Centers</summary><ul>`;
+    (data.general.defined_centers || []).forEach(c => html += `<li>${c}</li>`);
+    html += `</ul></details>`;
+    html += `<details open><summary>Undefined / Open Centers</summary><ul>`;
+    (data.general.undefined_centers || []).forEach(c => html += `<li>${c}</li>`);
     html += `</ul></details>`;
   }
 
-  // 4. Variables / Arrows
-  if (data.variables) {
-    html += `<h3>➳ Variables & Arrows</h3><pre>${JSON.stringify(data.variables, null, 2)}</pre>`;
+  // 4. Variables & Arrows
+  if (data.general?.variables) {
+    html += `<h3>➳ Variables & Arrows</h3><pre>${JSON.stringify(data.general.variables, null, 2)}</pre>`;
   }
 
-  // 5. Raw Full JSON (for power users)
+  // 5. Full Raw JSON (already working)
   html += `<h3>📋 Full Raw JSON</h3><details><summary>View complete data</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
 
   document.getElementById("richDashboard").innerHTML = html;
 }
 
-// Downloads (unchanged)
+// Download buttons
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
@@ -129,7 +132,7 @@ document.getElementById("downloadJsonBtn").onclick = () => {
   URL.revokeObjectURL(url);
 };
 
-// Mint placeholder
+// Mint button (still placeholder)
 document.getElementById("mintBtn").onclick = () => {
-  alert("✨ Soulbound NFT minting is ready for the next step — everything else is now fully working!");
+  alert("✨ Soulbound NFT minting is ready for the next step!");
 };
