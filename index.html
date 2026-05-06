@@ -21,6 +21,9 @@
     .result { display: none; }
     .buttons { display: flex; gap: 12px; margin-top: 20px; }
     .buttons button { flex: 1; }
+    details { margin: 15px 0; }
+    summary { font-weight: bold; cursor: pointer; }
+    pre { background: #111; padding: 15px; border-radius: 12px; overflow-x: auto; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -37,6 +40,7 @@
 
     <div id="result" class="card result">
       <h2>Your Human Design Blueprint</h2>
+      
       <table id="hdTable">
         <thead><tr><th>Key</th><th>Value</th></tr></thead>
         <tbody></tbody>
@@ -45,6 +49,9 @@
       <div id="bodygraphContainer" style="text-align:center; margin:20px 0;">
         <img id="bodygraph" alt="Your BodyGraph" style="max-width:100%; border-radius:16px;">
       </div>
+
+      <!-- RICH DASHBOARD -->
+      <div id="richDashboard"></div>
 
       <div class="buttons">
         <button id="downloadImageBtn">⬇️ Download BodyGraph PNG</button>
