@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Clean Compact Planetary Display)
+// app.js - Human Design Soulbound Blueprint dApp (Final Compact Planetary Display)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -66,18 +66,15 @@ function renderCompactPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:24px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:24px;">PERSONALITY</h3>`;
 
-  const createRow = (p, side) => {
+  const createRow = (p) => {
     const sym = planetSymbols[p.Planet] || "⚪";
     return `
-      <div class="planet-row" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(255,255,255,0.05); border-radius:14px; margin-bottom:8px;">
-        <span class="symbol" style="font-size:28px; width:36px;">${sym}</span>
-        <strong style="min-width:110px;">${p.Planet}</strong>
-        <span class="activation" style="font-size:1.1rem;">${p.Gate}.${p.Line}</span>
-        <button class="small-plus" onclick="this.parentElement.classList.toggle('expanded'); event.stopImmediatePropagation();" 
-                style="margin-left:auto; background:none; border:none; font-size:24px; width:28px; height:28px; line-height:24px; cursor:pointer;">+</button>
-        <div class="ctb-info" style="display:none; margin-left:8px; font-size:0.95rem; color:#aaa;">
-          C${p.Color} • T${p.Tone} • B${p.Base}
-        </div>
+      <div class="planet-row">
+        <span class="symbol">${sym}</span>
+        <strong>${p.Planet}</strong>
+        <span class="activation">${p.Gate}.${p.Line}</span>
+        <button class="small-plus">+</button>
+        <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
       </div>`;
   };
 
@@ -93,6 +90,21 @@ function renderCompactPlanetarySides(data, imageUrl) {
       <div style="flex:1;">${rightHTML}</div>
     </div>
   `;
+
+  // Attach click listeners for the + buttons
+  setTimeout(() => {
+    document.querySelectorAll('.planet-row').forEach(row => {
+      const plusBtn = row.querySelector('.small-plus');
+      const ctb = row.querySelector('.ctb-info');
+      if (plusBtn && ctb) {
+        plusBtn.onclick = (e) => {
+          e.stopImmediatePropagation();
+          ctb.style.display = ctb.style.display === 'block' ? 'none' : 'block';
+          plusBtn.textContent = ctb.style.display === 'block' ? '–' : '+';
+        };
+      }
+    });
+  }, 100);
 }
 
 function renderRichDashboard(data) {
