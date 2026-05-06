@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Final Ultra-Compact Display)
+// app.js - Human Design Soulbound Blueprint dApp (6-Line Dashboard)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -36,6 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
+    // Basic table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -45,8 +46,8 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderUltraCompactPlanetarySides(data, imageUrl);
-    renderRichDashboard(data);
+    renderCompactPlanetarySides(data, imageUrl);
+    render6LevelDashboard(data);
 
     document.getElementById("result").style.display = "block";
     window.currentData = data;
@@ -61,7 +62,7 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderUltraCompactPlanetarySides(data, imageUrl) {
+function renderCompactPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:20px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:20px;">PERSONALITY</h3>`;
 
@@ -116,37 +117,44 @@ function renderUltraCompactPlanetarySides(data, imageUrl) {
       }
     });
   }, 100);
-}
+};
 
-function renderRichDashboard(data) {
+function render6LevelDashboard(data) {
+  const levels = [
+    { title: "Line 1 — Foundation", content: `
+      <strong>Type:</strong> ${data.general?.energy_type}<br>
+      <strong>Strategy:</strong> ${data.general?.strategy}<br>
+      <strong>Authority:</strong> ${data.general?.inner_authority}<br>
+      <strong>Profile:</strong> ${data.general?.profile}<br>
+      <strong>Cross:</strong> ${data.general?.inc_cross}
+    `},
+    { title: "Line 2 — Planetary Blueprint", content: "Planetary activations shown in the sides above" },
+    { title: "Line 3 — Energy Centers", content: `
+      Defined: ${(data.general?.defined_centers || []).join(", ")}<br>
+      Open: ${(data.general?.undefined_centers || []).join(", ")}
+    `},
+    { title: "Line 4 — Channels & Flow", content: (data.channels?.Channels || []).map(ch => ch.channel).join("<br>") },
+    { title: "Line 5 — Variables & Arrows", content: `<pre>${JSON.stringify(data.general?.variables || {}, null, 2)}</pre>` },
+    { title: "Line 6 — Higher Purpose & NFT Utility", content: `
+      <strong>Incarnation Cross Role:</strong> ${data.general?.inc_cross}<br>
+      <strong>Soulbound NFT:</strong> Ready to mint<br>
+      <em>This blueprint is yours forever.</em>
+    `}
+  ];
+
   let html = "";
+  levels.forEach(level => {
+    html += `
+      <div class="level-card">
+        <div class="level-header">${level.title}</div>
+        <div>${level.content}</div>
+      </div>`;
+  });
 
-  if (data.channels?.Channels?.length) {
-    html += `<h3>🔗 Channels</h3><ul>`;
-    data.channels.Channels.forEach(ch => html += `<li>${ch.channel}</li>`);
-    html += `</ul>`;
-  }
-
-  if (data.general) {
-    html += `<h3>⚪ Centers</h3>
-      <details open><summary>Defined Centers</summary><ul>`;
-    (data.general.defined_centers || []).forEach(c => html += `<li>${c}</li>`);
-    html += `</ul></details>
-      <details open><summary>Undefined / Open Centers</summary><ul>`;
-    (data.general.undefined_centers || []).forEach(c => html += `<li>${c}</li>`);
-    html += `</ul></details>`;
-  }
-
-  if (data.general?.variables) {
-    html += `<h3>➳ Variables & Arrows</h3><pre>${JSON.stringify(data.general.variables, null, 2)}</pre>`;
-  }
-
-  html += `<h3>📋 Full Raw JSON</h3><details><summary>View complete data</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
-
-  document.getElementById("richDashboard").innerHTML = html;
+  document.getElementById("dashboardLevels").innerHTML = html;
 }
 
-// Download buttons
+// Download buttons (unchanged)
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
