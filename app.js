@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Final Clean Compact Layout)
+// app.js - Human Design Soulbound Blueprint dApp (Final Ultra-Clean Planetary Display)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -46,7 +46,7 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderCleanPlanetarySides(data, imageUrl);
+    renderUltraCleanPlanetarySides(data, imageUrl);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -62,25 +62,33 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderCleanPlanetarySides(data, imageUrl) {
+function renderUltraCleanPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666; margin-bottom:24px;">DESIGN</h3>`;
   let rightHTML = `<h3 style="color:#6666ff; margin-bottom:24px;">PERSONALITY</h3>`;
 
   const createRow = (p, isDesign) => {
     const sym = planetSymbols[p.Planet] || "⚪";
-    const symbolPart = isDesign 
-      ? `<span style="margin-left:auto; font-size:28px;">${sym}</span>` 
-      : `<span style="font-size:28px;">${sym}</span>`;
+    const activation = `${p.Gate}.${p.Line}`;
 
-    return `
-      <div class="planet-row">
-        ${isDesign ? '' : symbolPart}
-        <strong>${p.Planet}</strong>
-        <span class="activation">${p.Gate}.${p.Line}</span>
-        ${isDesign ? symbolPart : ''}
-        <button class="small-plus">+</button>
-        <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
-      </div>`;
+    if (isDesign) {
+      // Design side: + on left, Gate.Line in middle, Symbol on right
+      return `
+        <div class="planet-row">
+          <button class="small-plus">+</button>
+          <span class="activation">${activation}</span>
+          <span class="symbol">${sym}</span>
+          <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
+        </div>`;
+    } else {
+      // Personality side: Symbol on left, Gate.Line in middle, + on right
+      return `
+        <div class="planet-row">
+          <span class="symbol">${sym}</span>
+          <span class="activation">${activation}</span>
+          <button class="small-plus">+</button>
+          <div class="ctb-info">C${p.Color} • T${p.Tone} • B${p.Base}</div>
+        </div>`;
+    }
   };
 
   (data.gates?.des?.Planets || []).forEach(p => leftHTML += createRow(p, true));
