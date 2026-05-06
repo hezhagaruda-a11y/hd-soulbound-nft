@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Visual Planetary Sides)
+// app.js - Human Design Soulbound Blueprint dApp (Visual Planetary Sides - Fixed)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -46,10 +46,10 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    document.getElementById("bodygraph").src = imageUrl;
+    // Render the visual planetary sides layout (with BodyGraph in center)
+    renderPlanetarySides(data, imageUrl);
 
-    // Render visual planetary sides + rich dashboard
-    renderPlanetarySides(data);
+    // Render the rich expandable sections below
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -65,11 +65,11 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderPlanetarySides(data) {
+function renderPlanetarySides(data, imageUrl) {
   let leftHTML = `<h3 style="color:#ff6666">Design Side (Red)</h3>`;
   let rightHTML = `<h3 style="color:#6666ff">Personality Side (Black)</h3>`;
 
-  // Design (left)
+  // Design side (left)
   (data.gates?.des?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
     leftHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
@@ -79,7 +79,7 @@ function renderPlanetarySides(data) {
     </div>`;
   });
 
-  // Personality (right)
+  // Personality side (right)
   (data.gates?.prs?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
     rightHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
@@ -89,17 +89,19 @@ function renderPlanetarySides(data) {
     </div>`;
   });
 
+  // Build the full side-by-side layout with BodyGraph in the center
   document.getElementById("planetarySides").innerHTML = `
-    <div style="display:flex; gap:30px; margin:30px 0;">
+    <div style="display:flex; gap:30px; align-items:flex-start; margin:30px 0;">
       <div style="flex:1;">${leftHTML}</div>
-      <div style="flex:2; text-align:center;"><img id="bodygraph" alt="BodyGraph" style="max-width:100%; border-radius:16px;"></div>
+      <div style="flex:2; text-align:center;">
+        <img src="${imageUrl}" alt="BodyGraph" style="max-width:100%; border-radius:16px; background:#111; padding:10px;">
+      </div>
       <div style="flex:1;">${rightHTML}</div>
     </div>
   `;
 }
 
 function renderRichDashboard(data) {
-  // (keeps the expandable sections you already have)
   let html = "";
 
   if (data.channels?.Channels?.length) {
@@ -110,10 +112,10 @@ function renderRichDashboard(data) {
 
   if (data.general) {
     html += `<h3>⚪ Centers</h3>
-      <details open><summary>Defined</summary><ul>`;
+      <details open><summary>Defined Centers</summary><ul>`;
     (data.general.defined_centers || []).forEach(c => html += `<li>${c}</li>`);
     html += `</ul></details>
-      <details open><summary>Undefined / Open</summary><ul>`;
+      <details open><summary>Undefined / Open Centers</summary><ul>`;
     (data.general.undefined_centers || []).forEach(c => html += `<li>${c}</li>`);
     html += `</ul></details>`;
   }
@@ -127,7 +129,7 @@ function renderRichDashboard(data) {
   document.getElementById("richDashboard").innerHTML = html;
 }
 
-// Download buttons (unchanged)
+// Download buttons
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
@@ -149,5 +151,5 @@ document.getElementById("downloadJsonBtn").onclick = () => {
 };
 
 document.getElementById("mintBtn").onclick = () => {
-  alert("✨ Soulbound NFT minting ready for the next step!");
+  alert("✨ Soulbound NFT minting is ready for the next step!");
 };
