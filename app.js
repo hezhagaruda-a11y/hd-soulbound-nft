@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Humdes-style Planetary Display)
+// app.js - Human Design Soulbound Blueprint dApp (Clean Humdes-style Planetary Display)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -36,7 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Basic info
+    // Basic info table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -46,7 +46,7 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    renderHumdesPlanetarySides(data, imageUrl);
+    renderCleanPlanetarySides(data, imageUrl);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -62,21 +62,22 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderHumdesPlanetarySides(data, imageUrl) {
-  let leftHTML = `<h3 style="color:#ff6666; margin-bottom:20px;">DESIGN</h3>`;
-  let rightHTML = `<h3 style="color:#6666ff; margin-bottom:20px;">PERSONALITY</h3>`;
+function renderCleanPlanetarySides(data, imageUrl) {
+  let leftHTML = `<h3 style="color:#ff6666; margin-bottom:24px;">DESIGN</h3>`;
+  let rightHTML = `<h3 style="color:#6666ff; margin-bottom:24px;">PERSONALITY</h3>`;
 
   // Design Side (left)
   (data.gates?.des?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
     leftHTML += `
-      <div class="planet-item">
+      <div class="planet-row">
         <span class="symbol">${sym}</span>
         <strong>${p.Planet}</strong>
-        <span>Gate ${p.Gate} • Line ${p.Line}</span>
-        <span style="margin-left:auto; font-size:0.95rem; color:#aaa;">
-          C${p.Color} T${p.Tone} B${p.Base}
-        </span>
+        <span class="activation">${p.Gate}.${p.Line}</span>
+        <button class="toggle-btn" onclick="this.parentElement.classList.toggle('expanded')">+</button>
+        <div class="ctb">
+          C${p.Color} • T${p.Tone} • B${p.Base}
+        </div>
       </div>`;
   });
 
@@ -84,13 +85,14 @@ function renderHumdesPlanetarySides(data, imageUrl) {
   (data.gates?.prs?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
     rightHTML += `
-      <div class="planet-item">
+      <div class="planet-row">
         <span class="symbol">${sym}</span>
         <strong>${p.Planet}</strong>
-        <span>Gate ${p.Gate} • Line ${p.Line}</span>
-        <span style="margin-left:auto; font-size:0.95rem; color:#aaa;">
-          C${p.Color} T${p.Tone} B${p.Base}
-        </span>
+        <span class="activation">${p.Gate}.${p.Line}</span>
+        <button class="toggle-btn" onclick="this.parentElement.classList.toggle('expanded')">+</button>
+        <div class="ctb">
+          C${p.Color} • T${p.Tone} • B${p.Base}
+        </div>
       </div>`;
   });
 
@@ -133,7 +135,7 @@ function renderRichDashboard(data) {
   document.getElementById("richDashboard").innerHTML = html;
 }
 
-// Download buttons (unchanged)
+// Download buttons
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
