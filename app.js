@@ -1,4 +1,4 @@
-// app.js - Human Design Soulbound Blueprint dApp (Final Compact Planetary Display)
+// app.js - Human Design Soulbound Blueprint dApp (Clean Compact Planetary Display - Fixed)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -91,7 +91,7 @@ function renderCompactPlanetarySides(data, imageUrl) {
     </div>
   `;
 
-  // Attach click listeners for the + buttons
+  // Make + buttons functional
   setTimeout(() => {
     document.querySelectorAll('.planet-row').forEach(row => {
       const plusBtn = row.querySelector('.small-plus');
@@ -99,9 +99,12 @@ function renderCompactPlanetarySides(data, imageUrl) {
       if (plusBtn && ctb) {
         plusBtn.onclick = (e) => {
           e.stopImmediatePropagation();
-          ctb.style.display = ctb.style.display === 'block' ? 'none' : 'block';
-          plusBtn.textContent = ctb.style.display === 'block' ? '–' : '+';
+          const isHidden = ctb.style.display === 'none' || !ctb.style.display;
+          ctb.style.display = isHidden ? 'block' : 'none';
+          plusBtn.textContent = isHidden ? '–' : '+';
         };
+        // Start hidden
+        ctb.style.display = 'none';
       }
     });
   }, 100);
