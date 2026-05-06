@@ -28,20 +28,8 @@
     
     .container { max-width: 1280px; margin: 0 auto; }
     
-    h1 {
-      text-align: center;
-      font-size: 3.2rem;
-      margin-bottom: 8px;
-      letter-spacing: -2px;
-      font-weight: 700;
-    }
-    
-    .subtitle {
-      text-align: center;
-      color: var(--text-light);
-      margin-bottom: 50px;
-      font-size: 1.15rem;
-    }
+    h1 { text-align: center; font-size: 3.2rem; margin-bottom: 8px; letter-spacing: -2px; font-weight: 700; }
+    .subtitle { text-align: center; color: var(--text-light); margin-bottom: 50px; font-size: 1.15rem; }
     
     .card {
       background: var(--card);
@@ -75,40 +63,21 @@
       width: 100%;
       transition: all 0.3s ease;
     }
-    
     button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,255,170,0.4); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 24px 0 40px 0;
-    }
-    
-    th, td {
-      padding: 16px 20px;
-      text-align: left;
-      border-bottom: 1px solid #333;
-    }
-    
+    table { width: 100%; border-collapse: collapse; margin: 24px 0 40px 0; }
+    th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #333; }
     th { background: #1f1f1f; font-weight: 600; width: 160px; }
     
+    /* Planetary Layout - Responsive */
     .planetary-container {
       display: flex;
       gap: 40px;
       align-items: flex-start;
       margin: 50px 0;
     }
-    
-    .planetary-side {
-      flex: 1;
-    }
-    
-    .planetary-side h3 {
-      font-size: 1.4rem;
-      margin-bottom: 24px;
-      letter-spacing: -0.5px;
-    }
+    .planetary-side { flex: 1; }
+    .planetary-side h3 { font-size: 1.4rem; margin-bottom: 24px; letter-spacing: -0.5px; }
     
     .planet-item {
       display: flex;
@@ -120,22 +89,9 @@
       transition: all 0.2s ease;
       background: rgba(255,255,255,0.03);
     }
-    
-    .planet-item:hover {
-      background: rgba(255,255,255,0.08);
-      transform: translateX(4px);
-    }
-    
-    .planet-item .symbol {
-      font-size: 32px;
-      width: 40px;
-      text-align: center;
-    }
-    
-    .planet-item strong {
-      font-size: 1.1rem;
-      min-width: 110px;
-    }
+    .planet-item:hover { background: rgba(255,255,255,0.08); transform: translateX(4px); }
+    .planet-item .symbol { font-size: 32px; width: 40px; text-align: center; }
+    .planet-item strong { font-size: 1.1rem; min-width: 110px; }
     
     img {
       max-width: 100%;
@@ -147,46 +103,25 @@
     
     .result { display: none; }
     
-    .rich-section { margin-top: 50px; }
+    details { margin: 20px 0; background: #111; border-radius: 18px; overflow: hidden; border: 1px solid #222; }
+    summary { padding: 18px 24px; font-weight: 600; cursor: pointer; background: #1a1a1a; }
+    pre { background: #0a0a0a; padding: 24px; border-radius: 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.5; }
     
-    details {
-      margin: 20px 0;
-      background: #111;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid #222;
-    }
+    .buttons { display: flex; gap: 16px; margin-top: 50px; }
+    .buttons button { flex: 1; font-size: 1.15rem; padding: 22px; }
     
-    summary {
-      padding: 18px 24px;
-      font-weight: 600;
-      cursor: pointer;
-      background: #1a1a1a;
-    }
-    
-    pre {
-      background: #0a0a0a;
-      padding: 24px;
-      border-radius: 14px;
-      overflow-x: auto;
-      font-size: 13.5px;
-      line-height: 1.5;
-    }
-    
-    .buttons {
-      display: flex;
-      gap: 16px;
-      margin-top: 50px;
-    }
-    
-    .buttons button {
-      flex: 1;
-      font-size: 1.15rem;
-      padding: 22px;
-    }
-    
+    /* Mobile Responsiveness */
     @media (max-width: 960px) {
       .planetary-container { flex-direction: column; gap: 40px; }
+      h1 { font-size: 2.6rem; }
+      .card { padding: 28px; }
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 20px 12px; }
+      .planetary-side h3 { font-size: 1.25rem; }
+      .planet-item { font-size: 0.95rem; padding: 10px 12px; }
+      .planet-item .symbol { font-size: 26px; }
     }
   </style>
 </head>
@@ -210,11 +145,9 @@
         <tbody></tbody>
       </table>
 
-      <!-- Planetary Sides + BodyGraph -->
       <div id="planetarySides" class="planetary-container"></div>
 
-      <!-- Rich Dashboard -->
-      <div id="richDashboard" class="rich-section"></div>
+      <div id="richDashboard"></div>
 
       <div class="buttons">
         <button id="downloadImageBtn">⬇️ Download BodyGraph PNG</button>
