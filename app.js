@@ -1,9 +1,9 @@
-// app.js - Human Design Soulbound Blueprint dApp (Visual Planetary Sides - Fixed)
+// app.js - Human Design Soulbound Blueprint dApp (Humdes-style Planetary Display)
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
 const planetSymbols = {
-  Sun: "☉", Moon: "☽", North_Node: "☊", South_Node: "☋",
+  Sun: "☉", Earth: "⊕", Moon: "☽", North_Node: "☊", South_Node: "☋",
   Mercury: "☿", Venus: "♀", Mars: "♂", Jupiter: "♃",
   Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
 };
@@ -36,7 +36,7 @@ document.getElementById("generateBtn").onclick = async () => {
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    // Basic info table
+    // Basic info
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -46,10 +46,7 @@ document.getElementById("generateBtn").onclick = async () => {
       <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
     `;
 
-    // Render the visual planetary sides layout (with BodyGraph in center)
-    renderPlanetarySides(data, imageUrl);
-
-    // Render the rich expandable sections below
+    renderHumdesPlanetarySides(data, imageUrl);
     renderRichDashboard(data);
 
     document.getElementById("result").style.display = "block";
@@ -65,36 +62,43 @@ document.getElementById("generateBtn").onclick = async () => {
   }
 };
 
-function renderPlanetarySides(data, imageUrl) {
-  let leftHTML = `<h3 style="color:#ff6666">Design Side (Red)</h3>`;
-  let rightHTML = `<h3 style="color:#6666ff">Personality Side (Black)</h3>`;
+function renderHumdesPlanetarySides(data, imageUrl) {
+  let leftHTML = `<h3 style="color:#ff6666; margin-bottom:20px;">DESIGN</h3>`;
+  let rightHTML = `<h3 style="color:#6666ff; margin-bottom:20px;">PERSONALITY</h3>`;
 
-  // Design side (left)
+  // Design Side (left)
   (data.gates?.des?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
-    leftHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
-      <span style="font-size:22px;">${sym}</span>
-      <strong>${p.Planet}</strong>
-      <span>Gate ${p.Gate} • Line ${p.Line} • C${p.Color} T${p.Tone} B${p.Base}</span>
-    </div>`;
+    leftHTML += `
+      <div class="planet-item">
+        <span class="symbol">${sym}</span>
+        <strong>${p.Planet}</strong>
+        <span>Gate ${p.Gate} • Line ${p.Line}</span>
+        <span style="margin-left:auto; font-size:0.95rem; color:#aaa;">
+          C${p.Color} T${p.Tone} B${p.Base}
+        </span>
+      </div>`;
   });
 
-  // Personality side (right)
+  // Personality Side (right)
   (data.gates?.prs?.Planets || []).forEach(p => {
     const sym = planetSymbols[p.Planet] || "⚪";
-    rightHTML += `<div style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:15px;">
-      <span style="font-size:22px;">${sym}</span>
-      <strong>${p.Planet}</strong>
-      <span>Gate ${p.Gate} • Line ${p.Line} • C${p.Color} T${p.Tone} B${p.Base}</span>
-    </div>`;
+    rightHTML += `
+      <div class="planet-item">
+        <span class="symbol">${sym}</span>
+        <strong>${p.Planet}</strong>
+        <span>Gate ${p.Gate} • Line ${p.Line}</span>
+        <span style="margin-left:auto; font-size:0.95rem; color:#aaa;">
+          C${p.Color} T${p.Tone} B${p.Base}
+        </span>
+      </div>`;
   });
 
-  // Build the full side-by-side layout with BodyGraph in the center
   document.getElementById("planetarySides").innerHTML = `
-    <div style="display:flex; gap:30px; align-items:flex-start; margin:30px 0;">
+    <div style="display:flex; gap:40px; align-items:flex-start;">
       <div style="flex:1;">${leftHTML}</div>
       <div style="flex:2; text-align:center;">
-        <img src="${imageUrl}" alt="BodyGraph" style="max-width:100%; border-radius:16px; background:#111; padding:10px;">
+        <img src="${imageUrl}" alt="BodyGraph" style="max-width:100%; border-radius:24px; background:#111; padding:20px; box-shadow:0 20px 40px rgba(0,0,0,0.7);">
       </div>
       <div style="flex:1;">${rightHTML}</div>
     </div>
@@ -129,7 +133,7 @@ function renderRichDashboard(data) {
   document.getElementById("richDashboard").innerHTML = html;
 }
 
-// Download buttons
+// Download buttons (unchanged)
 document.getElementById("downloadImageBtn").onclick = () => {
   if (!window.currentImageUrl) return alert("Generate chart first");
   const a = document.createElement("a");
