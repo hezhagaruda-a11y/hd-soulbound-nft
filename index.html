@@ -34,7 +34,7 @@
     @media (min-width: 960px) { .dashboard-levels { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); } }
     .level-card { background: #111; border-radius: 20px; padding: 24px; border: 1px solid #222; word-break: break-word; }
     .level-header { font-size: 1.4rem; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
-    .toggle-btn { padding: 6px 14px; border-radius: 9999px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-left: 12px; }
+    .toggle-btn { padding: 6px 14px; border-radius: 9999px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-left: 8px; }
   </style>
 </head>
 <body>
@@ -80,7 +80,6 @@
     const pentaGates = [15,5,46,29,14,2,1,8,7,31,13,33];
     const pentaPillars = [[15,5],[46,29],[14,2],[1,8],[7,31],[13,33]];
 
-    // Generate → automatically saves to dashboard
     document.getElementById("generateBtn").onclick = async () => {
       const btn = document.getElementById("generateBtn");
       btn.disabled = true;
@@ -105,22 +104,26 @@
         const imageBlob = await imgRes.blob();
         const imageUrl = URL.createObjectURL(imageBlob);
 
-        // Fill result section
         const tbody = document.querySelector("#hdTable tbody");
-        tbody.innerHTML = `<tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
+        tbody.innerHTML = `
+          <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
           <tr><td><strong>Strategy</strong></td><td>${data.general?.strategy || "—"}</td></tr>
           <tr><td><strong>Authority</strong></td><td>${data.general?.inner_authority || "—"}</td></tr>
           <tr><td><strong>Profile</strong></td><td>${data.general?.profile || "—"}</td></tr>
-          <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>`;
+          <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
+        `;
+
         document.getElementById("bodygraph").src = imageUrl;
         renderCompactPlanetarySides(data);
         render6LevelDashboard(data);
+
         document.getElementById("result").style.display = "block";
         currentData = data;
 
-        // AUTO-SAVE to ranking list
-        const name = data.general?.energy_type + " " + (data.general?.profile || "");
-        savedDesigns.push({ id: Date.now(), name: name, data: data, enabled: true });
+        // Auto-save with name prompt to avoid blind duplicates
+        const defaultName = data.general?.energy_type + " " + (data.general?.profile || "");
+        const name = prompt("Name this design (or press OK to use default)", defaultName);
+        savedDesigns.push({ id: Date.now(), name: name || defaultName, data: data });
         localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
         renderLibrary();
         renderCompatibility();
@@ -134,8 +137,8 @@
       }
     };
 
-    function renderCompactPlanetarySides(data) { /* same as previous */ }
-    function render6LevelDashboard(data) { /* same as previous */ }
+    function renderCompactPlanetarySides(data) { /* same as previous versions */ }
+    function render6LevelDashboard(data) { /* same as previous versions */ }
 
     function renderLibrary() {
       const panel = document.getElementById("libraryPanel");
@@ -147,9 +150,9 @@
         <div class="design-card">
           <div class="info">
             <strong>${d.name}</strong><br>
-            ${d.data.general?.energy_type} • ${d.data.general?.profile}
+            ${d.data.general?.energy_type} • ${d.data.general?.profile} • ${d.data.general?.inner_authority}
           </div>
-          <button onclick="viewFullBlueprint(${d.id})" style="margin-left:12px;padding:8px 16px;">View Full</button>
+          <button onclick="viewFullBlueprint(${d.id})" style="margin-left:12px;padding:8px 16px;font-size:1rem;background:#10b981;">View Full Blueprint</button>
         </div>
       `).join('');
     }
@@ -170,14 +173,17 @@
         return;
       }
 
-      let html = `<h3>Group Penta Strengths (Ranked)</h3>`;
+      let html = `<h3>Group Penta Strengths (Ranked by Total Penta Gates)</h3>`;
+
       const ranked = savedDesigns.map(d => {
         const gates = [...(d.data.gates?.prs?.Planets || []), ...(d.data.gates?.des?.Planets || [])].map(p => p.Gate);
         const totalPenta = gates.filter(g => pentaGates.includes(g)).length;
         let pillarCount = 0;
-        pentaPillars.forEach(p => { if (p.some(g => gates.includes(g))) pillarCount++; });
+        pentaPillars.forEach(pillar => {
+          if (pillar.some(g => gates.includes(g))) pillarCount++;
+        });
         return { ...d, totalPenta, pillarCount };
-      }).sort((a,b) => b.totalPenta - a.totalPenta);
+      }).sort((a, b) => b.totalPenta - a.totalPenta);
 
       ranked.forEach(item => {
         html += `
