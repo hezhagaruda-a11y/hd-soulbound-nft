@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Strong CSP that allows ethers.js CDN -->
+  <!-- STRONG CSP - Allows ethers.js CDN + all needed resources -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://*.infura.io; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
@@ -135,19 +135,6 @@
       }
     };
 
-    function renderCompactPlanetarySides(data) { /* full function from earlier */ }
-    function render6LevelDashboard(data) { /* full function from earlier */ }
-
-    // Save button (optional)
-    document.getElementById("saveToDashboardBtn").onclick = () => {
-      if (!currentData) return;
-      const name = prompt("Name this design", currentData.general?.energy_type || "New Design");
-      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
-      localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
-      renderLibrary();
-      renderCompatibility();
-    };
-
     // Mint Soulbound NFT
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
@@ -180,6 +167,9 @@
         alert("Mint failed: " + e.message);
       }
     };
+
+    function renderCompactPlanetarySides(data) { /* full function from earlier */ }
+    function render6LevelDashboard(data) { /* full function from earlier */ }
 
     function renderLibrary() {
       const panel = document.getElementById("libraryPanel");
