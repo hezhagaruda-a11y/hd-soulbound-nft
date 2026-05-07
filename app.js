@@ -1,5 +1,5 @@
-// app.js - DEBUG VERSION - Human Design Soulbound Blueprint
-console.log("✅ app.js loaded successfully - version 2026-05-06 debug");
+// app.js - CSP-SAFE VERSION - Human Design Soulbound Blueprint
+console.log("✅ CSP-SAFE app.js loaded successfully - version 2026-05-07");
 
 const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
 const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
@@ -10,10 +10,10 @@ const planetSymbols = {
   Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
 };
 
-console.log("✅ Planet symbols and constants ready");
+console.log("✅ Constants and planet symbols ready");
 
 document.getElementById("generateBtn").onclick = async () => {
-  console.log("🟢 Button clicked - starting generation");
+  console.log("🟢 Generate button clicked");
 
   const btn = document.getElementById("generateBtn");
   btn.disabled = true;
@@ -27,31 +27,22 @@ document.getElementById("generateBtn").onclick = async () => {
   const [hour, minute] = timeInput.split(":");
 
   const params = new URLSearchParams({ year, month, day, hour, minute, place });
-  console.log("📡 Fetching with params:", params.toString());
 
   try {
-    console.log("📡 Calling /calculate...");
     const res = await fetch(`${BACKEND_URL}/calculate?${params}`, {
       headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
     });
-    console.log("📡 /calculate response status:", res.status);
-
     if (!res.ok) throw new Error(`Calculate failed: ${res.status}`);
     const data = await res.json();
-    console.log("✅ Full chart data received");
 
-    console.log("📡 Calling /bodygraph...");
     const imgRes = await fetch(`${BACKEND_URL}/bodygraph?${params}`, {
       headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
     });
-    console.log("📡 /bodygraph response status:", imgRes.status);
-
     if (!imgRes.ok) throw new Error(`Bodygraph failed: ${imgRes.status}`);
     const imageBlob = await imgRes.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
-    console.log("✅ BodyGraph image ready");
 
-    // Fill table
+    // Fill summary table
     const tbody = document.querySelector("#hdTable tbody");
     tbody.innerHTML = `
       <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
@@ -62,6 +53,7 @@ document.getElementById("generateBtn").onclick = async () => {
     `;
 
     document.getElementById("bodygraph").src = imageUrl;
+
     renderCompactPlanetarySides(data);
     render6LevelDashboard(data);
 
@@ -72,18 +64,99 @@ document.getElementById("generateBtn").onclick = async () => {
     console.log("🎉 Full dashboard rendered successfully!");
 
   } catch (e) {
-    console.error("🚨 CRITICAL ERROR:", e);
-    alert("Error: " + e.message + "\n\nCheck console (F12) for details.");
+    console.error("🚨 ERROR:", e);
+    alert("Error: " + e.message + "\n\nOpen F12 → Console and send me everything red");
   } finally {
     btn.disabled = false;
     btn.textContent = "Generate Human Design Chart";
   }
 };
 
-function renderCompactPlanetarySides(data) { /* same as before */ }
-function render6LevelDashboard(data) { /* same as before */ }
+function renderCompactPlanetarySides(data) {
+  let leftHTML = `<h3 style="color:#ff6666; margin-bottom:20px;">DESIGN</h3>`;
+  let rightHTML = `<h3 style="color:#6666ff; margin-bottom:20px;">PERSONALITY</h3>`;
 
-// Download buttons (same as before)
-document.getElementById("downloadImageBtn").onclick = () => { /* ... */ };
-document.getElementById("downloadJsonBtn").onclick = () => { /* ... */ };
-document.getElementById("mintBtn").onclick = () => { alert("✨ Soulbound NFT minting is ready for the next step!"); };
+  const createRow = (p, isDesign) => {
+    const sym = planetSymbols[p.Planet] || "⚪";
+    const activation = `${p.Gate}.${p.Line}`;
+    const ctbHTML = `C${p.Color} • T${p.Tone} • B${p.Base}`;
+
+    if (isDesign) {
+      return `<div class="planet-row" data-ctb="${ctbHTML}">
+                <button class="small-plus">+</button>
+                <span class="activation">${activation}</span>
+                <span class="symbol">${sym}</span>
+                <div class="ctb-info" style="display:none;">${ctbHTML}</div>
+              </div>`;
+    } else {
+      return `<div class="planet-row" data-ctb="${ctbHTML}">
+                <span class="symbol">${sym}</span>
+                <span class="activation">${activation}</span>
+                <button class="small-plus">+</button>
+                <div class="ctb-info" style="display:none;">${ctbHTML}</div>
+              </div>`;
+    }
+  };
+
+  (data.gates?.des?.Planets || []).forEach(p => leftHTML += createRow(p, true));
+  (data.gates?.prs?.Planets || []).forEach(p => rightHTML += createRow(p, false));
+
+  const containerHTML = `
+    <div style="display:flex; gap:24px; align-items:flex-start;">
+      <div style="flex:1;">${leftHTML}</div>
+      <div style="flex:1;">${rightHTML}</div>
+    </div>
+  `;
+
+  const planetaryContainer = document.getElementById("planetarySides");
+  planetaryContainer.innerHTML = containerHTML;
+
+  // Event delegation - completely CSP safe
+  planetaryContainer.addEventListener('click', function(e) {
+    if (e.target.classList.contains('small-plus')) {
+      const row = e.target.closest('.planet-row');
+      const ctb = row.querySelector('.ctb-info');
+      const isHidden = ctb.style.display === 'none';
+      ctb.style.display = isHidden ? 'block' : 'none';
+      e.target.textContent = isHidden ? '–' : '+';
+    }
+  });
+}
+
+function render6LevelDashboard(data) {
+  const pentaGates = [15,5,46,29,14,2,1,8,7,31,13,33];
+  let html = `
+    <div class="level-card"><div class="level-header">Line 1 — Foundation</div><div>Planetary activations shown above</div></div>
+    <div class="level-card"><div class="level-header">Line 2 — Defined Centers</div><div>Defined: ${(data.general?.defined_centers || []).join(", ")}</div></div>
+    <div class="level-card"><div class="level-header">Line 3 — Open Centers</div><div>Open: ${(data.general?.undefined_centers || []).join(", ")}</div></div>
+    <div class="level-card"><div class="level-header">Line 4 — Channels & Circuitry</div><ul>${(data.channels?.Channels || []).map(ch => `<li>${ch.channel}</li>`).join("")}</ul></div>
+    <div class="level-card"><div class="level-header">Line 5 — Penta Gate Score</div><div>Penta gates present: ${pentaGates.filter(g => (data.gates?.prs?.Planets || []).some(p => p.Gate === g) || (data.gates?.des?.Planets || []).some(p => p.Gate === g)).join(", ") || "None"}</div></div>
+    <div class="level-card"><div class="level-header">Line 6 — Higher Purpose & NFT Utility</div><div><strong>Incarnation Cross Role:</strong> ${data.general?.inc_cross || "—"}<br><strong>Soulbound NFT:</strong> Ready to mint<br><em>This blueprint is yours forever.</em></div></div>
+  `;
+  document.getElementById("dashboardLevels").innerHTML = html;
+};
+
+// Download buttons
+document.getElementById("downloadImageBtn").onclick = () => {
+  if (!window.currentImageUrl) return alert("Generate chart first");
+  const a = document.createElement("a");
+  a.href = window.currentImageUrl;
+  a.download = "human-design-bodygraph.png";
+  a.click();
+};
+
+document.getElementById("downloadJsonBtn").onclick = () => {
+  if (!window.currentData) return alert("Generate chart first");
+  const dataStr = JSON.stringify(window.currentData, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "human-design-blueprint.json";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("mintBtn").onclick = () => {
+  alert("✨ Soulbound NFT minting is ready for the next step!");
+};
