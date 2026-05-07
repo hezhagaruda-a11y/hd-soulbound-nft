@@ -23,12 +23,12 @@
 <body>
   <div class="container">
     <h1>🌌 Design Control Dashboard</h1>
-    <p class="subtitle">Generate • Upload to IPFS • Mint Soulbound NFT</p>
+    <p class="subtitle">Generate → IPFS → Soulbound NFT (Permanent)</p>
 
     <!-- Pinata JWT -->
     <div class="card">
-      <h3>Pinata JWT (for IPFS upload)</h3>
-      <input type="password" id="pinataJWT" placeholder="Paste your Pinata JWT here" value="">
+      <h3>📌 Pinata JWT (paste once)</h3>
+      <input type="password" id="pinataJWT" placeholder="eyJhbGciOi..." value="">
       <button onclick="saveJWT()">Save JWT</button>
     </div>
 
@@ -63,7 +63,7 @@
       const jwt = document.getElementById("pinataJWT").value.trim();
       if (jwt) {
         localStorage.setItem("pinataJWT", jwt);
-        alert("✅ Pinata JWT saved!");
+        alert("✅ Pinata JWT saved in browser!");
       }
     };
 
@@ -109,14 +109,14 @@
       if (!currentData || !bodygraphBlob) return alert("Generate a chart first!");
 
       const jwt = localStorage.getItem("pinataJWT");
-      if (!jwt) return alert("Please paste your Pinata JWT first!");
+      if (!jwt) return alert("Please paste and save your Pinata JWT first!");
 
       const btn = document.getElementById("uploadAndMintBtn");
       btn.disabled = true;
       btn.textContent = "Uploading to IPFS...";
 
       try {
-        // 1. Upload BodyGraph image
+        // Upload BodyGraph image
         const formData = new FormData();
         formData.append("file", bodygraphBlob, "bodygraph.png");
 
@@ -128,7 +128,7 @@
         const imageData = await imageRes.json();
         const imageCID = imageData.IpfsHash;
 
-        // 2. Create metadata JSON
+        // Create metadata
         const metadata = {
           name: "Soulbound Human Design Blueprint",
           description: "Permanent, non-transferable Human Design chart",
@@ -136,13 +136,10 @@
           attributes: currentData.general
         };
 
-        // 3. Upload metadata JSON
+        // Upload metadata JSON
         const jsonRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`
-          },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
           body: JSON.stringify(metadata)
         });
         const jsonData = await jsonRes.json();
@@ -150,24 +147,22 @@
 
         const ipfsURI = `ipfs://${metadataCID}`;
 
-        // 4. Mint NFT with permanent IPFS URI
+        // Mint soulbound NFT with permanent IPFS URI
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
 
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, [
-          "function mint(address to, string uri) public"
-        ], signer);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ["function mint(address to, string uri) public"], signer);
 
         const tx = await contract.mint(await signer.getAddress(), ipfsURI);
         await tx.wait();
 
-        btn.textContent = "✅ Minted!";
-        alert(`🎉 Success!\n\nSoulbound NFT minted with permanent IPFS link:\n${ipfsURI}\n\nTx hash: ${tx.hash}`);
+        btn.textContent = "✅ Minted on IPFS + Blockchain!";
+        alert(`🎉 SUCCESS!\n\nYour blueprint is now permanently stored on IPFS and minted as a soulbound NFT.\n\nIPFS URI: ${ipfsURI}\nTx hash: ${tx.hash}`);
       } catch (e) {
         console.error(e);
         alert("Error: " + (e.message || e));
-        btn.textContent = "Upload to IPFS & Mint Soulbound NFT";
+        btn.textContent = "🌐 Upload to IPFS & Mint Soulbound NFT";
       }
     };
   </script>
