@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app;">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; }
     * { box-sizing: border-box; }
@@ -85,16 +86,18 @@
       }
     };
 
-    // Mint Soulbound NFT – pure native (no external scripts)
+    // Mint with ethers.js (reliable ABI encoding)
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first!");
 
       try {
-        if (!window.ethereum) return alert("Please install MetaMask");
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
 
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        const from = accounts[0];
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, [
+          "function mint(address to, string uri) public"
+        ], signer);
 
         const metadata = {
           name: "Soulbound Human Design Blueprint",
@@ -104,31 +107,10 @@
         };
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        // Correct calldata for mint(address to, string uri)
-        const functionSelector = "0x40c10f19";
-        const toPadded = from.toLowerCase().replace("0x", "").padStart(64, "0");
-        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
-        const uriLengthHex = uri.length.toString(16).padStart(64, "0");
-        const uriBytes = new TextEncoder().encode(uri);
-        let uriDataHex = Array.from(uriBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+        const tx = await contract.mint(await signer.getAddress(), uri);
+        await tx.wait();
 
-        // Pad string data to 32-byte boundary
-        const paddingNeeded = (32 - (uriBytes.length % 32)) % 32;
-        uriDataHex += "0".repeat(paddingNeeded * 2);
-
-        const calldata = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
-
-        const txHash = await window.ethereum.request({
-          method: "eth_sendTransaction",
-          params: [{
-            from: from,
-            to: CONTRACT_ADDRESS,
-            data: calldata,
-            gas: "0x" + (400000).toString(16)
-          }]
-        });
-
-        alert(`✅ Transaction sent successfully!\n\nTx hash: ${txHash}\n\nCheck MetaMask → Activity for confirmation on Sepolia.`);
+        alert(`✅ Soulbound NFT minted successfully!\n\nTx hash: ${tx.hash}\n\nYour blueprint is now permanently on-chain and soulbound.`);
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + (e.message || e));
@@ -136,7 +118,7 @@
     };
 
     document.getElementById("saveToDashboardBtn").onclick = () => {
-      if (currentData) alert("💾 Blueprint saved locally!");
+      if (currentData) alert("💾 Saved locally!");
     };
   </script>
 </body>
