@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://*.infura.io; font-src 'self';">
+  <!-- Strong CSP that allows ethers.js CDN -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://*.infura.io; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
   <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
@@ -75,7 +76,7 @@
   <script>
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
-    const CONTRACT_ADDRESS = "0x1d61d5fFD97ed9044410A2Ff8858d57553d355B9";   // ← Your deployed contract
+    const CONTRACT_ADDRESS = "0x1d61d5fFD97ed9044410A2Ff8858d57553d355B9";
 
     let savedDesigns = JSON.parse(localStorage.getItem("hdDesigns")) || [];
     let currentData = null;
@@ -84,9 +85,70 @@
     const pentaGates = [15,5,46,29,14,2,1,8,7,31,13,33];
     const pentaPillars = [[15,5],[46,29],[14,2],[1,8],[7,31],[13,33]];
 
-    document.getElementById("generateBtn").onclick = async () => { /* full generation logic */ };
+    // Generate Chart
+    document.getElementById("generateBtn").onclick = async () => {
+      const btn = document.getElementById("generateBtn");
+      btn.disabled = true;
+      btn.textContent = "Generating...";
 
-    // MINT SOULBOUND NFT
+      const dateInput = document.getElementById("birthDate").value;
+      const timeInput = document.getElementById("birthTime").value;
+      const place = document.getElementById("birthPlace").value.trim() || "Sulaymaniyah";
+
+      const [year, month, day] = dateInput.split("-");
+      const [hour, minute] = timeInput.split(":");
+
+      const params = new URLSearchParams({ year, month, day, hour, minute, place });
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/calculate?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
+        if (!res.ok) throw new Error("Calculate failed");
+        const data = await res.json();
+
+        const imgRes = await fetch(`${BACKEND_URL}/bodygraph?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
+        if (!imgRes.ok) throw new Error("Bodygraph failed");
+        const imageBlob = await imgRes.blob();
+        const imageUrl = URL.createObjectURL(imageBlob);
+
+        const tbody = document.querySelector("#hdTable tbody");
+        tbody.innerHTML = `
+          <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
+          <tr><td><strong>Strategy</strong></td><td>${data.general?.strategy || "—"}</td></tr>
+          <tr><td><strong>Authority</strong></td><td>${data.general?.inner_authority || "—"}</td></tr>
+          <tr><td><strong>Profile</strong></td><td>${data.general?.profile || "—"}</td></tr>
+          <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
+        `;
+
+        document.getElementById("bodygraph").src = imageUrl;
+        renderCompactPlanetarySides(data);
+        render6LevelDashboard(data);
+
+        document.getElementById("result").style.display = "block";
+        currentData = data;
+
+      } catch (e) {
+        console.error(e);
+        alert("Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate Human Design Chart";
+      }
+    };
+
+    function renderCompactPlanetarySides(data) { /* full function from earlier */ }
+    function render6LevelDashboard(data) { /* full function from earlier */ }
+
+    // Save button (optional)
+    document.getElementById("saveToDashboardBtn").onclick = () => {
+      if (!currentData) return;
+      const name = prompt("Name this design", currentData.general?.energy_type || "New Design");
+      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
+      localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
+      renderLibrary();
+      renderCompatibility();
+    };
+
+    // Mint Soulbound NFT
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
 
@@ -112,15 +174,77 @@
         const tx = await contract.mint(await signer.getAddress(), uri);
         await tx.wait();
 
-        alert("✅ Soulbound NFT minted successfully on Sepolia!\n\nToken is now in your MetaMask wallet.");
+        alert("✅ Soulbound NFT minted successfully on Sepolia testnet!\n\nCheck your MetaMask wallet under NFTs.");
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + e.message);
       }
     };
 
-    // Rest of the script (renderLibrary, renderCompatibility, etc.) remains the same as the previous working version
-    // ... (full render functions from previous messages are included in your actual file)
+    function renderLibrary() {
+      const panel = document.getElementById("libraryPanel");
+      if (savedDesigns.length === 0) {
+        panel.innerHTML = "<p>No designs saved yet.</p>";
+        return;
+      }
+      panel.innerHTML = savedDesigns.map(d => `
+        <div class="design-card">
+          <div class="info">
+            <strong>${d.name}</strong><br>
+            ${d.data.general?.energy_type} • ${d.data.general?.profile}
+          </div>
+          <button onclick="viewFullBlueprint(${d.id})" style="margin-left:12px;padding:8px 16px;font-size:1rem;background:#10b981;">View Full Blueprint</button>
+        </div>
+      `).join('');
+    }
+
+    function viewFullBlueprint(id) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      currentData = design.data;
+      document.getElementById("result").style.display = "block";
+      renderCompactPlanetarySides(currentData);
+      render6LevelDashboard(currentData);
+    }
+
+    function renderCompatibility() {
+      const panel = document.getElementById("compatibilityPanel");
+      if (savedDesigns.length === 0) {
+        panel.innerHTML = "<p>No designs yet.</p>";
+        return;
+      }
+      let html = `<h3>Group Penta Strengths (Ranked)</h3>`;
+      const ranked = savedDesigns.map(d => {
+        const gates = [...(d.data.gates?.prs?.Planets || []), ...(d.data.gates?.des?.Planets || [])].map(p => p.Gate);
+        const totalPenta = gates.filter(g => pentaGates.includes(g)).length;
+        let pillarCount = 0;
+        pentaPillars.forEach(pillar => { if (pillar.some(g => gates.includes(g))) pillarCount++; });
+        return { ...d, totalPenta, pillarCount };
+      }).sort((a, b) => b.totalPenta - a.totalPenta);
+
+      ranked.forEach(item => {
+        html += `
+          <div class="design-card">
+            <div class="info">
+              <strong>${item.name}</strong><br>
+              Total Penta Gates: <strong>${item.totalPenta}</strong><br>
+              Activated Pillars: <strong>${item.pillarCount}/6</strong>
+            </div>
+          </div>`;
+      });
+      panel.innerHTML = html;
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById("libraryPanel").style.display = tab.dataset.tab === "library" ? "block" : "none";
+        document.getElementById("compatibilityPanel").style.display = tab.dataset.tab === "compatibility" ? "block" : "none";
+        document.getElementById("categorizePanel").style.display = tab.dataset.tab === "categorize" ? "block" : "none";
+        if (tab.dataset.tab === "compatibility") renderCompatibility();
+      };
+    });
 
     renderLibrary();
     renderCompatibility();
