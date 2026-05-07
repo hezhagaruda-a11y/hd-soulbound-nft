@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://api.pinata.cloud;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://api.pinata.cloud;">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; }
     * { box-sizing: border-box; }
@@ -101,7 +100,7 @@
       }
     };
 
-    // Reliable mint using ethers.js
+    // Pure native mint (no ethers.js)
     document.getElementById("uploadAndMintBtn").onclick = async () => {
       if (!currentData || !bodygraphBlob) return alert("Generate a chart first!");
 
@@ -113,7 +112,7 @@
       btn.textContent = "Uploading to IPFS...";
 
       try {
-        // Upload image
+        // Upload image to Pinata
         const formData = new FormData();
         formData.append("file", bodygraphBlob, "bodygraph.png");
         const imageRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
@@ -143,20 +142,38 @@
 
         const ipfsURI = `ipfs://${metadataCID}`;
 
-        // Mint with ethers.js (reliable)
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
+        // Mint using pure native MetaMask
+        if (!window.ethereum) return alert("Please install MetaMask");
 
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, [
-          "function mint(address to, string uri) public"
-        ], signer);
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        const from = accounts[0];
 
-        const tx = await contract.mint(await signer.getAddress(), ipfsURI);
-        await tx.wait();
+        const functionSelector = "0x40c10f19";
+        const toPadded = from.toLowerCase().replace("0x", "").padStart(64, "0");
+        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
+        const uriLengthHex = ipfsURI.length.toString(16).padStart(64, "0");
+        const uriBytes = new TextEncoder().encode(ipfsURI);
+        let uriDataHex = Array.from(uriBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+
+        // Pad to 32-byte boundary
+        const paddingNeeded = (32 - (uriBytes.length % 32)) % 32;
+        uriDataHex += "0".repeat(paddingNeeded * 2);
+
+        const calldata = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
+
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [{
+            from: from,
+            to: CONTRACT_ADDRESS,
+            data: calldata,
+            gas: "0x" + (400000).toString(16)
+          }]
+        });
 
         btn.textContent = "✅ Minted!";
-        alert(`🎉 SUCCESS!\n\nIPFS URI: ${ipfsURI}\nTx hash: ${tx.hash}`);
+        alert(`🎉 SUCCESS!\n\nIPFS URI: ${ipfsURI}\nTx hash: ${txHash}`);
       } catch (e) {
         console.error(e);
         alert("Error: " + (e.message || e));
