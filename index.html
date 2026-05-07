@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CSP META TAG - This overrides Vercel's cached policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
+  
   <title>🌌 Human Design Blueprint • Soulbound NFT</title>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #00ffaa; --text: #f0f0f0; --text-light: #aaaaaa; --border: #333; }
@@ -53,4 +56,22 @@
         <tbody></tbody>
       </table>
 
-      <div id="bodygraphContainer" style="text-align:center
+      <div id="bodygraphContainer" style="text-align:center; margin:40px 0;">
+        <img id="bodygraph" alt="BodyGraph" style="max-width:100%; border-radius:24px;">
+      </div>
+
+      <div id="planetarySides" class="planetary-container"></div>
+
+      <div id="dashboardLevels" class="dashboard-levels"></div>
+
+      <div class="buttons">
+        <button id="downloadImageBtn">⬇️ Download BodyGraph PNG</button>
+        <button id="downloadJsonBtn">⬇️ Download Full Data (JSON)</button>
+        <button id="mintBtn">✨ Mint as Soulbound NFT</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
