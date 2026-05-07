@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Clean CSP - no external scripts -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
@@ -75,7 +74,7 @@
   <script>
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
-    const CONTRACT_ADDRESS = "0x1d61d5fFD97ed9044410A2Ff8858d57553d355B9";
+    const CONTRACT_ADDRESS = "0xa635bCA178bb3B3C06786A37a65557Bf7a072f78";
 
     let savedDesigns = JSON.parse(localStorage.getItem("hdDesigns")) || [];
     let currentData = null;
@@ -134,7 +133,7 @@
       }
     };
 
-    // Mint Soulbound NFT - pure native MetaMask (no external CDN)
+    // Mint Soulbound NFT - native MetaMask
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
 
@@ -155,7 +154,6 @@
 
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        // Correct ABI encoding for mint(address to, string uri)
         const functionSelector = "0x40c10f19";
         const toPadded = from.slice(2).padStart(64, '0');
         const offset = "0000000000000000000000000000000000000000000000000000000000000040";
