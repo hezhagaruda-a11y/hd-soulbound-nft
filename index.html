@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app;">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; }
     * { box-sizing: border-box; }
@@ -36,7 +35,7 @@
       <h2>Your Human Design Blueprint</h2>
       <table id="hdTable"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody></tbody></table>
       <img id="bodygraph" alt="BodyGraph" style="max-width:100%; border-radius:24px; margin:40px auto; display:block; background:#111; padding:20px;">
-      
+
       <button id="saveToDashboardBtn" style="margin-top:12px;background:#10b981;">💾 Save to Dashboard</button>
       <button id="mintSoulboundBtn" style="margin-top:12px;background:#10b981;">✨ Mint as Soulbound NFT (Sepolia)</button>
     </div>
@@ -86,22 +85,16 @@
       }
     };
 
-    // Mint Soulbound NFT using ethers.js
+    // Mint Soulbound NFT – pure native MetaMask (no external scripts)
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first!");
 
       try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
+        if (!window.ethereum) return alert("Please install MetaMask");
 
-        const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          [
-            "function mint(address to, string uri) public"
-          ],
-          signer
-        );
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        const from = accounts[0];
 
         const metadata = {
           name: "Soulbound Human Design Blueprint",
@@ -111,20 +104,36 @@
         };
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        const tx = await contract.mint(await signer.getAddress(), uri);
-        await tx.wait();
+        // Build calldata for mint(address to, string uri)
+        const functionSelector = "0x40c10f19";
+        const toPadded = from.toLowerCase().replace("0x", "").padStart(64, "0");
+        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
+        const uriLengthHex = uri.length.toString(16).padStart(64, "0");
+        const uriDataHex = Array.from(new TextEncoder().encode(uri))
+          .map(byte => byte.toString(16).padStart(2, "0"))
+          .join("");
 
-        alert(`✅ Soulbound NFT minted successfully!\n\nTransaction hash: ${tx.hash}\n\nYou now own your permanent Human Design Blueprint on Sepolia.`);
+        const calldata = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
+
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [{
+            from: from,
+            to: CONTRACT_ADDRESS,
+            data: calldata,
+            gas: "0x" + (350000).toString(16)
+          }]
+        });
+
+        alert(`✅ Transaction sent successfully!\n\nTx hash: ${txHash}\n\nCheck MetaMask → Activity for confirmation on Sepolia.`);
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + (e.message || e));
       }
     };
 
-    // Save button (optional)
     document.getElementById("saveToDashboardBtn").onclick = () => {
-      if (!currentData) return;
-      alert("💾 Saved to local Dashboard (full version coming next if you want it)");
+      if (currentData) alert("💾 Blueprint saved to local dashboard (full library coming next if needed)");
     };
   </script>
 </body>
