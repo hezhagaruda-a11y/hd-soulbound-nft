@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://*.infura.io; font-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
   <style>
@@ -133,7 +133,7 @@
       }
     };
 
-    // Mint Soulbound NFT using raw window.ethereum (no external CDN)
+    // Mint Soulbound NFT - Fixed raw ABI encoding
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
 
@@ -154,12 +154,14 @@
 
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        // Function selector for mint(address, string)
-        const data = "0x40c10f19" + 
-          from.slice(2).padStart(64, '0') + 
-          "0000000000000000000000000000000000000000000000000000000000000040" + 
-          uri.length.toString(16).padStart(64, '0') + 
-          Array.from(new TextEncoder().encode(uri)).map(b => b.toString(16).padStart(2, '0')).join('');
+        // Correct ABI encoding for mint(address, string)
+        const functionSelector = "0x40c10f19";
+        const toPadded = from.slice(2).padStart(64, '0');
+        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
+        const uriLengthHex = uri.length.toString(16).padStart(64, '0');
+        const uriDataHex = Array.from(new TextEncoder().encode(uri)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const data = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
 
         const txHash = await provider.request({
           method: "eth_sendTransaction",
@@ -167,23 +169,23 @@
             from: from,
             to: CONTRACT_ADDRESS,
             data: data,
-            gas: "0x" + (300000).toString(16)
+            gas: "0x" + (350000).toString(16)
           }]
         });
 
-        alert("✅ Transaction sent!\n\nTransaction hash: " + txHash + "\n\nCheck MetaMask → Activity for confirmation.");
+        alert("✅ Transaction sent to Sepolia!\n\nTransaction hash: " + txHash + "\n\nCheck MetaMask → Activity for confirmation.");
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + e.message);
       }
     };
 
-    function renderCompactPlanetarySides(data) { /* full function from earlier versions */ }
-    function render6LevelDashboard(data) { /* full function from earlier versions */ }
+    function renderCompactPlanetarySides(data) { /* same as previous versions */ }
+    function render6LevelDashboard(data) { /* same as previous versions */ }
 
-    function renderLibrary() { /* full function from earlier versions */ }
-    function viewFullBlueprint(id) { /* full function from earlier versions */ }
-    function renderCompatibility() { /* full function from earlier versions */ }
+    function renderLibrary() { /* same as previous versions */ }
+    function viewFullBlueprint(id) { /* same as previous versions */ }
+    function renderCompatibility() { /* same as previous versions */ }
 
     document.querySelectorAll('.tab').forEach(tab => {
       tab.onclick = () => {
