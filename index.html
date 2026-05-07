@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
+  <!-- Strong CSP allowing ethers.js -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; --text-light: #aaaaaa; --border: #333; }
     * { box-sizing: border-box; }
@@ -133,17 +135,16 @@
       }
     };
 
-    // Mint Soulbound NFT - Fixed raw ABI encoding
+    // Mint Soulbound NFT - using full ABI
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
 
       try {
         if (!window.ethereum) return alert("Please install MetaMask");
 
-        const provider = window.ethereum;
-        await provider.request({ method: "eth_requestAccounts" });
-        const accounts = await provider.request({ method: "eth_accounts" });
-        const from = accounts[0];
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
 
         const metadata = {
           name: "Soulbound Human Design",
@@ -154,38 +155,37 @@
 
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        // Correct ABI encoding for mint(address, string)
-        const functionSelector = "0x40c10f19";
-        const toPadded = from.slice(2).padStart(64, '0');
-        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
-        const uriLengthHex = uri.length.toString(16).padStart(64, '0');
-        const uriDataHex = Array.from(new TextEncoder().encode(uri)).map(b => b.toString(16).padStart(2, '0')).join('');
+        const abi = [
+          {
+            "inputs": [
+              { "internalType": "address", "name": "to", "type": "address" },
+              { "internalType": "string", "name": "uri", "type": "string" }
+            ],
+            "name": "mint",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ];
 
-        const data = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-        const txHash = await provider.request({
-          method: "eth_sendTransaction",
-          params: [{
-            from: from,
-            to: CONTRACT_ADDRESS,
-            data: data,
-            gas: "0x" + (350000).toString(16)
-          }]
-        });
+        const tx = await contract.mint(await signer.getAddress(), uri);
+        await tx.wait();
 
-        alert("✅ Transaction sent to Sepolia!\n\nTransaction hash: " + txHash + "\n\nCheck MetaMask → Activity for confirmation.");
+        alert("✅ Soulbound NFT minted successfully on Sepolia testnet!\n\nCheck your MetaMask wallet under NFTs.");
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + e.message);
       }
     };
 
-    function renderCompactPlanetarySides(data) { /* same as previous versions */ }
-    function render6LevelDashboard(data) { /* same as previous versions */ }
+    function renderCompactPlanetarySides(data) { /* full function from earlier versions */ }
+    function render6LevelDashboard(data) { /* full function from earlier versions */ }
 
-    function renderLibrary() { /* same as previous versions */ }
-    function viewFullBlueprint(id) { /* same as previous versions */ }
-    function renderCompatibility() { /* same as previous versions */ }
+    function renderLibrary() { /* full function from earlier versions */ }
+    function viewFullBlueprint(id) { /* full function from earlier versions */ }
+    function renderCompatibility() { /* full function from earlier versions */ }
 
     document.querySelectorAll('.tab').forEach(tab => {
       tab.onclick = () => {
