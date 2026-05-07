@@ -20,7 +20,8 @@
     .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab { padding: 12px 24px; background: #222; border-radius: 9999px; cursor: pointer; font-weight: 600; }
     .tab.active { background: var(--accent); color: #000; }
-    .design-card { background: #111; padding: 20px; border-radius: 20px; margin-bottom: 16px; border: 1px solid #333; }
+    .design-card { background: #111; padding: 20px; border-radius: 20px; margin-bottom: 16px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    .design-card .info { flex: 1; }
     img#bodygraph { max-width: 100%; border-radius: 24px; background: #111; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.7); display: block; margin: 40px auto; }
     .planetary-container { display: flex; flex-direction: column; gap: 48px; margin: 40px 0; }
     @media (min-width: 960px) { .planetary-container { flex-direction: row; gap: 40px; } }
@@ -33,8 +34,7 @@
     @media (min-width: 960px) { .dashboard-levels { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); } }
     .level-card { background: #111; border-radius: 20px; padding: 24px; border: 1px solid #222; word-break: break-word; }
     .level-header { font-size: 1.4rem; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; }
-    .modal-content { max-width: 1280px; margin: 40px auto; background: #111; border-radius: 28px; padding: 32px; }
+    .toggle-btn { padding: 6px 14px; border-radius: 9999px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-left: 12px; }
   </style>
 </head>
 <body>
@@ -42,7 +42,6 @@
     <h1>🌌 Design Control Dashboard</h1>
     <p class="subtitle">Single Blueprint Generator • Multi-Person Library • Grouping & Compatibility</p>
 
-    <!-- Single Chart Generator -->
     <div class="card">
       <input type="date" id="birthDate" value="1983-08-09">
       <input type="time" id="birthTime" value="16:44">
@@ -50,17 +49,14 @@
       <button id="generateBtn">Generate Human Design Chart</button>
     </div>
 
-    <!-- Individual Blueprint Result -->
     <div id="result" class="card" style="display:none;">
       <h2>Your Human Design Blueprint</h2>
       <table id="hdTable"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody></tbody></table>
       <div id="bodygraphContainer"><img id="bodygraph" alt="BodyGraph"></div>
       <div id="planetarySides" class="planetary-container"></div>
       <div id="dashboardLevels" class="dashboard-levels"></div>
-      <button id="saveToDashboardBtn" style="margin-top:24px;background:#10b981;">💾 Save to Design Control Dashboard</button>
     </div>
 
-    <!-- Design Control Dashboard -->
     <div class="card">
       <h2>Design Control Dashboard</h2>
       <div class="tab-bar" id="tabBar">
@@ -74,14 +70,6 @@
     </div>
   </div>
 
-  <!-- Full Blueprint Modal -->
-  <div id="fullBlueprintModal" class="modal">
-    <div class="modal-content">
-      <button onclick="closeModal()" style="float:right;background:#333;color:white;padding:8px 16px;border:none;border-radius:12px;cursor:pointer;">Close</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
-
   <script>
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
@@ -89,37 +77,79 @@
     let currentData = null;
 
     const planetSymbols = { Sun: "☉", Earth: "⊕", Moon: "☽", North_Node: "☊", South_Node: "☋", Mercury: "☿", Venus: "♀", Mars: "♂", Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇" };
-
     const pentaGates = [15,5,46,29,14,2,1,8,7,31,13,33];
     const pentaPillars = [[15,5],[46,29],[14,2],[1,8],[7,31],[13,33]];
 
-    // Generate Chart
-    document.getElementById("generateBtn").onclick = async () => { /* same reliable generation logic as previous version */ };
+    // Generate → automatically saves to dashboard
+    document.getElementById("generateBtn").onclick = async () => {
+      const btn = document.getElementById("generateBtn");
+      btn.disabled = true;
+      btn.textContent = "Generating...";
 
-    function renderCompactPlanetarySides(data) { /* same as before */ }
-    function render6LevelDashboard(data) { /* same as before */ }
+      const dateInput = document.getElementById("birthDate").value;
+      const timeInput = document.getElementById("birthTime").value;
+      const place = document.getElementById("birthPlace").value.trim() || "Sulaymaniyah";
 
-    // Save to Dashboard
-    document.getElementById("saveToDashboardBtn").onclick = () => {
-      if (!currentData) return;
-      const name = prompt("Name this design", currentData.general?.energy_type || "New Design");
-      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
-      localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
-      renderLibrary();
-      alert("✅ Saved to Design Control Dashboard");
+      const [year, month, day] = dateInput.split("-");
+      const [hour, minute] = timeInput.split(":");
+
+      const params = new URLSearchParams({ year, month, day, hour, minute, place });
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/calculate?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
+        if (!res.ok) throw new Error("Calculate failed");
+        const data = await res.json();
+
+        const imgRes = await fetch(`${BACKEND_URL}/bodygraph?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
+        if (!imgRes.ok) throw new Error("Bodygraph failed");
+        const imageBlob = await imgRes.blob();
+        const imageUrl = URL.createObjectURL(imageBlob);
+
+        // Fill result section
+        const tbody = document.querySelector("#hdTable tbody");
+        tbody.innerHTML = `<tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
+          <tr><td><strong>Strategy</strong></td><td>${data.general?.strategy || "—"}</td></tr>
+          <tr><td><strong>Authority</strong></td><td>${data.general?.inner_authority || "—"}</td></tr>
+          <tr><td><strong>Profile</strong></td><td>${data.general?.profile || "—"}</td></tr>
+          <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>`;
+        document.getElementById("bodygraph").src = imageUrl;
+        renderCompactPlanetarySides(data);
+        render6LevelDashboard(data);
+        document.getElementById("result").style.display = "block";
+        currentData = data;
+
+        // AUTO-SAVE to ranking list
+        const name = data.general?.energy_type + " " + (data.general?.profile || "");
+        savedDesigns.push({ id: Date.now(), name: name, data: data, enabled: true });
+        localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
+        renderLibrary();
+        renderCompatibility();
+
+      } catch (e) {
+        console.error(e);
+        alert("Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate Human Design Chart";
+      }
     };
+
+    function renderCompactPlanetarySides(data) { /* same as previous */ }
+    function render6LevelDashboard(data) { /* same as previous */ }
 
     function renderLibrary() {
       const panel = document.getElementById("libraryPanel");
       if (savedDesigns.length === 0) {
-        panel.innerHTML = "<p>No designs saved yet. Generate and save one above.</p>";
+        panel.innerHTML = "<p>No designs saved yet.</p>";
         return;
       }
       panel.innerHTML = savedDesigns.map(d => `
         <div class="design-card">
-          <strong>${d.name}</strong><br>
-          ${d.data.general?.energy_type} • ${d.data.general?.profile} • ${d.data.general?.inner_authority}
-          <button onclick="viewFullBlueprint(${d.id})" style="margin-top:12px;width:auto;padding:10px 20px;font-size:1rem;background:#10b981;">View Full Blueprint</button>
+          <div class="info">
+            <strong>${d.name}</strong><br>
+            ${d.data.general?.energy_type} • ${d.data.general?.profile}
+          </div>
+          <button onclick="viewFullBlueprint(${d.id})" style="margin-left:12px;padding:8px 16px;">View Full</button>
         </div>
       `).join('');
     }
@@ -128,58 +158,51 @@
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
       currentData = design.data;
-      const modal = document.getElementById("fullBlueprintModal");
-      const content = document.getElementById("modalContent");
-      content.innerHTML = `
-        <h2>${design.name} — Full Blueprint</h2>
-        <table id="modalTable"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody></tbody></table>
-        <div id="modalBodygraph"><img id="modalBodygraph" src="" alt="BodyGraph"></div>
-        <div id="modalPlanetarySides" class="planetary-container"></div>
-        <div id="modalDashboardLevels" class="dashboard-levels"></div>
-      `;
-      // Fill modal table, bodygraph, planetary, and 6-line
-      const tbody = document.querySelector("#modalTable tbody");
-      tbody.innerHTML = `
-        <tr><td><strong>Energy Type</strong></td><td>${currentData.general?.energy_type || "—"}</td></tr>
-        <tr><td><strong>Strategy</strong></td><td>${currentData.general?.strategy || "—"}</td></tr>
-        <tr><td><strong>Authority</strong></td><td>${currentData.general?.inner_authority || "—"}</td></tr>
-        <tr><td><strong>Profile</strong></td><td>${currentData.general?.profile || "—"}</td></tr>
-        <tr><td><strong>Incarnation Cross</strong></td><td>${currentData.general?.inc_cross || "—"}</td></tr>
-      `;
-      // Note: Full bodygraph image and render functions would be called here in production
-      modal.style.display = "block";
+      document.getElementById("result").style.display = "block";
+      renderCompactPlanetarySides(currentData);
+      render6LevelDashboard(currentData);
     }
 
-    function closeModal() {
-      document.getElementById("fullBlueprintModal").style.display = "none";
-    }
-
-    // Group Compatibility Tab with Penta Analysis
     function renderCompatibility() {
       const panel = document.getElementById("compatibilityPanel");
       if (savedDesigns.length === 0) {
-        panel.innerHTML = "<p>Add designs to the Library first to see group Penta strengths.</p>";
+        panel.innerHTML = "<p>No designs yet.</p>";
         return;
       }
-      let html = "<h3>Group Penta Strengths</h3>";
-      savedDesigns.forEach(d => {
+
+      let html = `<h3>Group Penta Strengths (Ranked)</h3>`;
+      const ranked = savedDesigns.map(d => {
         const gates = [...(d.data.gates?.prs?.Planets || []), ...(d.data.gates?.des?.Planets || [])].map(p => p.Gate);
         const totalPenta = gates.filter(g => pentaGates.includes(g)).length;
         let pillarCount = 0;
-        pentaPillars.forEach(pillar => {
-          if (pillar.some(g => gates.includes(g))) pillarCount++;
-        });
+        pentaPillars.forEach(p => { if (p.some(g => gates.includes(g))) pillarCount++; });
+        return { ...d, totalPenta, pillarCount };
+      }).sort((a,b) => b.totalPenta - a.totalPenta);
+
+      ranked.forEach(item => {
         html += `
           <div class="design-card">
-            <strong>${d.name}</strong><br>
-            Total Penta Gates: <strong>${totalPenta}</strong><br>
-            Activated Penta Pillars: <strong>${pillarCount}/6</strong>
+            <div class="info">
+              <strong>${item.name}</strong><br>
+              Total Penta Gates: <strong>${item.totalPenta}</strong><br>
+              Activated Pillars: <strong>${item.pillarCount}/6</strong>
+            </div>
+            <div>
+              <button onclick="toggleMatching(${item.id}, true)" class="toggle-btn" style="background:#10b981;color:#000;">ON</button>
+              <button onclick="toggleMatching(${item.id}, false)" class="toggle-btn" style="background:#ef4444;color:#fff;">OFF</button>
+            </div>
           </div>`;
       });
       panel.innerHTML = html;
     }
 
-    // Tab switching
+    function toggleMatching(id, enabled) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (design) design.enabled = enabled;
+      localStorage.setItem("hdDesigns", JSON.stringify(savedDesigns));
+      renderCompatibility();
+    }
+
     document.querySelectorAll('.tab').forEach(tab => {
       tab.onclick = () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -192,6 +215,7 @@
     });
 
     renderLibrary();
+    renderCompatibility();
   </script>
 </body>
 </html>
