@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Strong CSP allowing ethers.js -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.ethers.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
+  <!-- Clean CSP - no external scripts -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app; font-src 'self';">
 
   <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
   <style>
     :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; --text-light: #aaaaaa; --border: #333; }
     * { box-sizing: border-box; }
@@ -135,16 +134,17 @@
       }
     };
 
-    // Mint Soulbound NFT - using full ABI
+    // Mint Soulbound NFT - pure native MetaMask (no external CDN)
     document.getElementById("mintSoulboundBtn").onclick = async () => {
       if (!currentData) return alert("Generate a chart first");
 
       try {
         if (!window.ethereum) return alert("Please install MetaMask");
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
+        const provider = window.ethereum;
+        await provider.request({ method: "eth_requestAccounts" });
+        const accounts = await provider.request({ method: "eth_accounts" });
+        const from = accounts[0];
 
         const metadata = {
           name: "Soulbound Human Design",
@@ -155,25 +155,26 @@
 
         const uri = "data:application/json;base64," + btoa(JSON.stringify(metadata));
 
-        const abi = [
-          {
-            "inputs": [
-              { "internalType": "address", "name": "to", "type": "address" },
-              { "internalType": "string", "name": "uri", "type": "string" }
-            ],
-            "name": "mint",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          }
-        ];
+        // Correct ABI encoding for mint(address to, string uri)
+        const functionSelector = "0x40c10f19";
+        const toPadded = from.slice(2).padStart(64, '0');
+        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
+        const uriLengthHex = uri.length.toString(16).padStart(64, '0');
+        const uriDataHex = Array.from(new TextEncoder().encode(uri)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+        const data = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
 
-        const tx = await contract.mint(await signer.getAddress(), uri);
-        await tx.wait();
+        const txHash = await provider.request({
+          method: "eth_sendTransaction",
+          params: [{
+            from: from,
+            to: CONTRACT_ADDRESS,
+            data: data,
+            gas: "0x" + (350000).toString(16)
+          }]
+        });
 
-        alert("✅ Soulbound NFT minted successfully on Sepolia testnet!\n\nCheck your MetaMask wallet under NFTs.");
+        alert("✅ Transaction sent to Sepolia!\n\nTransaction hash: " + txHash + "\n\nCheck MetaMask → Activity for confirmation.");
       } catch (e) {
         console.error(e);
         alert("Mint failed: " + e.message);
