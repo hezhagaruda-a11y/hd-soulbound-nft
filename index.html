@@ -153,7 +153,7 @@
       </div>
     </div>
 
-    <!-- Library & Compatibility tabs -->
+    <!-- Library & Compatibility -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Your Design Library</h2>
@@ -206,17 +206,15 @@
 
         const url = `${BACKEND_URL}/calculate?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         
-        const res = await fetch(url, {
-          headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
-        });
-
+        const res = await fetch(url, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
         if (!res.ok) throw new Error(`API error ${res.status}`);
         
         currentData = await res.json();
-        console.log("🔍 FULL API RESPONSE:", currentData);   // ← Open DevTools → Console and copy this
+        console.log("🔍 FULL API RESPONSE:", currentData);
 
         // BodyGraph
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
+        console.log("📸 BodyGraph URL:", imgUrl);
         const img = document.getElementById('bodygraphImg');
         img.src = imgUrl;
         img.onerror = () => document.getElementById('bodygraphError').style.display = 'block';
@@ -234,7 +232,7 @@
     });
 
     function renderSummary() {
-      const g = currentData.general || currentData || {};
+      const g = currentData.general || {};
       const html = `
         <tr><td><strong>Energy Type</strong></td><td>${g.energy_type || '—'}</td></tr>
         <tr><td><strong>Strategy</strong></td><td>${g.strategy || '—'}</td></tr>
@@ -252,9 +250,9 @@
       pers.innerHTML = '';
       des.innerHTML = '';
 
-      // Try every possible location the API might put the planets
-      let personality = currentData.planets?.personality || currentData.personality || currentData.general?.planets?.personality || [];
-      let design = currentData.planets?.design || currentData.design || currentData.general?.planets?.design || [];
+      // FIXED: Use the exact paths from your API response
+      let personality = currentData.gates?.prs?.Planets || [];
+      let design = currentData.gates?.des?.Planets || [];
 
       personality.forEach(p => pers.appendChild(createPlanetRow(p, 'personality-side')));
       design.forEach(p => des.appendChild(createPlanetRow(p, 'design-side')));
@@ -263,7 +261,7 @@
     function createPlanetRow(p, sideClass) {
       const row = document.createElement('div');
       row.className = `planet-row ${sideClass}`;
-      const symbolMap = {Sun:"☉",Earth:"⊕",Moon:"☽","North Node":"☊","South Node":"☋",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇"};
+      const symbolMap = {Sun:"☉",Earth:"⊕",Moon:"☽",North_Node:"☊",South_Node:"☋",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇"};
       const symbol = symbolMap[p.Planet] || "★";
       const gateLine = `${p.Gate || '?'}.${p.Line || '?'}`;
       const ctb = `C${p.Color||'?'} T${p.Tone||'?'} B${p.Base||'?'}`;
@@ -277,13 +275,13 @@
       return row;
     }
 
-    // Save to Library, View, Compatibility (same as before)
+    // Save, Library, ViewDesign, Compatibility (unchanged)
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
-      alert("✅ Saved!");
+      alert("✅ Saved to Library");
       renderLibrary();
     });
 
