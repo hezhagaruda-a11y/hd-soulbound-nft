@@ -117,7 +117,7 @@
     .status-btn.on { background: #10b981; color: #000; }
     .remove-btn { background: #ff4444; color: white; }
 
-    /* Group Compatibility styling */
+    /* Group Compatibility & Approved Candidates styling */
     .penta-bar {
       height: 12px;
       background: #222;
@@ -142,7 +142,7 @@
     <div class="tab active" data-tab="generate">Generate Blueprint</div>
     <div class="tab" data-tab="library">Library</div>
     <div class="tab" data-tab="compatibility">Group Compatibility</div>
-    <div class="tab" data-tab="alpha-pool">Alpha Pool</div>
+    <div class="tab" data-tab="approved-candidates">Approved Candidates</div>
   </div>
 
   <div class="content">
@@ -194,7 +194,7 @@
       </div>
     </div>
 
-    <!-- GROUP COMPATIBILITY TAB (v1.9) -->
+    <!-- GROUP COMPATIBILITY TAB -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
@@ -202,21 +202,18 @@
       </div>
     </div>
 
-    <!-- ALPHA POOL TAB -->
-    <div id="alpha-pool-tab" class="hidden">
+    <!-- APPROVED CANDIDATES TAB (renamed from Alpha Pool) -->
+    <div id="approved-candidates-tab" class="hidden">
       <div class="card">
-        <h2 style="margin-bottom:20px;">Alpha Pool</h2>
-        <p style="text-align:center;color:#aaa;padding:80px 20px;">
-          The Alpha Pool is the future home of our most potent group archetypes...<br><br>
-          <em>This space will evolve into a living archive of the strongest energetic configurations.</em>
-        </p>
+        <h2 style="margin-bottom:20px;">Approved Candidates</h2>
+        <div id="approvedContent"></div>
       </div>
     </div>
   </div>
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v1.9
+      STORY OF THIS CODE – FOUNDATION v1.10
       =====================================
       We have now reached a mature and beautiful foundation.
 
@@ -230,22 +227,20 @@
       - v1.6 : Added ON/OFF status toggle between View and Remove buttons
       - v1.7 : Toggle now defaults to ON and clearly shows current status
       - v1.8 : Group Compatibility tab is now fully live and intelligent
-      - v1.9 : Group Compatibility is now ranked highest-to-lowest score + gentle green View button on each card
+      - v1.9 : Group Compatibility ranked highest-to-lowest + green View button
+      - v1.10: Added "Approve" button (50/50 with View) in Group Compatibility with confirmation prompt.
+               Approved designs are moved to the new "Approved Candidates" tab.
 
-      The Group Compatibility tab now:
-      • Only analyses designs toggled ON
-      • Ranks them from highest to lowest resonance score
-      • Includes a gentle green "👁️ View" button that opens the full blueprint + BodyGraph
-      • Maintains the clean, elegant layout you loved
+      The flow is now complete:
+      Generate → Save to Library → Toggle ON → View in Group Compatibility → Approve (with confirmation) → appears in Approved Candidates.
 
-      This tab is the living heart of group intelligence — the original reason we started this entire project.
+      This toggle + Approve system is the foundation for future matching, team building, and penta resonance logic.
       The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
-    // Penta definitions
     const PENTA_GATES = [15, 5, 46, 29, 14, 2, 1, 8, 7, 31, 13, 33];
     const PENTA_PILLARS = [
       { name: "15-5", gates: [15, 5] },
@@ -267,14 +262,15 @@
         document.getElementById('generate-tab').classList.add('hidden');
         document.getElementById('library-tab').classList.add('hidden');
         document.getElementById('compatibility-tab').classList.add('hidden');
-        document.getElementById('alpha-pool-tab').classList.add('hidden');
+        document.getElementById('approved-candidates-tab').classList.add('hidden');
         document.getElementById(tab.dataset.tab + '-tab').classList.remove('hidden');
         if (tab.dataset.tab === 'library') renderLibrary();
         if (tab.dataset.tab === 'compatibility') renderCompatibility();
+        if (tab.dataset.tab === 'approved-candidates') renderApprovedCandidates();
       });
     });
 
-    // Generate (unchanged)
+    // Generate
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -375,14 +371,14 @@
         name: name || "Untitled", 
         data: currentData,
         birth: birthData,
-        status: "ON"
+        status: "ON",
+        approved: false
       });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
     });
 
-    // Render Library
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
       if (savedDesigns.length === 0) {
@@ -464,7 +460,7 @@
       }
     };
 
-    // ====================== GROUP COMPATIBILITY TAB (v1.9) ======================
+    // ====================== GROUP COMPATIBILITY TAB ======================
     function calculatePentaStats(data) {
       if (!data || !data.gates) return { gates: 0, pillars: 0, score: 0 };
 
@@ -493,7 +489,6 @@
         return;
       }
 
-      // v1.9: Sort by score descending (highest first)
       activeDesigns = activeDesigns.sort((a, b) => {
         const scoreA = calculatePentaStats(a.data).score;
         const scoreB = calculatePentaStats(b.data).score;
@@ -517,10 +512,56 @@
               <div style="margin-top:8px;font-size:1.4rem;color:var(--accent);">Score: ${stats.score}</div>
             </div>
 
-            <!-- Gentle green View button -->
-            <button onclick="viewDesign(${d.id});" style="margin-top:16px;width:100%;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
-              👁️ View Full Blueprint
-            </button>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button onclick="viewDesign(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
+                👁️ View Full Blueprint
+              </button>
+              <button onclick="approveDesign(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
+                ✅ Approve
+              </button>
+            </div>
+          </div>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    window.approveDesign = function(id) {
+      if (confirm("Approve this candidate for the Approved Candidates list?")) {
+        const design = savedDesigns.find(d => d.id === id);
+        if (design) {
+          design.approved = true;
+          localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+          alert("✅ Approved and moved to Approved Candidates tab.");
+          renderCompatibility();
+          renderApprovedCandidates();
+        }
+      }
+    };
+
+    // ====================== APPROVED CANDIDATES TAB ======================
+    function renderApprovedCandidates() {
+      const container = document.getElementById('approvedContent');
+      const approvedDesigns = savedDesigns.filter(d => d.approved === true);
+
+      if (approvedDesigns.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No approved candidates yet.<br>Go to Group Compatibility and approve some designs.</p>`;
+        return;
+      }
+
+      let html = `<h3 style="margin-bottom:16px;">Approved Candidates</h3>`;
+
+      approvedDesigns.forEach(d => {
+        const g = d.data.general || {};
+        html += `
+          <div style="margin-bottom:16px;background:#111;padding:16px;border-radius:12px;">
+            <strong>${d.name}</strong><br>
+            <small style="color:#aaa;">${g.energy_type} • ${g.profile}</small>
+            <div style="margin-top:8px;">
+              <button onclick="viewDesign(${d.id});" style="width:100%;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
+                👁️ View Full Blueprint
+              </button>
+            </div>
           </div>`;
       });
 
@@ -530,7 +571,8 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.9 – Group Compatibility ranked highest-to-lowest + green View button', 'color:#10b981;font-weight:bold');
+      renderApprovedCandidates();
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.10 – Approve button added + Approved Candidates tab live', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
