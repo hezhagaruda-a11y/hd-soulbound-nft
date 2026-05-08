@@ -168,7 +168,7 @@
       </div>
     </div>
 
-    <!-- LIBRARY TAB – Fixed & Clean -->
+    <!-- LIBRARY TAB -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -179,7 +179,7 @@
       </div>
     </div>
 
-    <!-- Group Compatibility & Alpha Pool (unchanged) -->
+    <!-- Other tabs unchanged -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
@@ -220,7 +220,7 @@
       });
     });
 
-    // Generate (unchanged)
+    // Generate
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -241,6 +241,7 @@
         
         currentData = await res.json();
 
+        // Load BodyGraph
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         const imgRes = await fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
         if (imgRes.ok) {
@@ -305,12 +306,11 @@
       return row;
     }
 
-    // Save to Library – now also stores birth parameters for correct BodyGraph reload
+    // Save to Library – now always stores birth parameters
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       
-      // Store birth parameters so View can correctly reload BodyGraph
       const birthData = {
         date: document.getElementById('birthDate').value,
         time: document.getElementById('birthTime').value,
@@ -328,7 +328,7 @@
       renderLibrary();
     });
 
-    // Render Library with clean View + Remove buttons
+    // Render Library
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
       if (savedDesigns.length === 0) {
@@ -357,30 +357,36 @@
       }
     };
 
+    // FIXED: View now correctly loads the specific saved design's BodyGraph
     window.viewDesign = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
 
       currentData = design.data;
 
-      // Switch to Generate tab and show the result
+      // Switch to Generate tab
       document.querySelector('[data-tab="generate"]').click();
 
-      // Re-render everything for the selected design
+      // Render summary and planetary data
       renderSummary();
       renderPlanetarySides();
 
-      // Re-load the correct BodyGraph for this specific birth data
-      if (design.birth) {
+      // Re-load the correct BodyGraph using saved birth data
+      if (design.birth && design.birth.date) {
         const [year, month, day] = design.birth.date.split('-').map(Number);
         const [hour, minute] = design.birth.time.split(':').map(Number);
         const place = design.birth.place || "Unknown";
 
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
-        const imgRes = fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }})
+        
+        fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }})
           .then(res => res.ok ? res.blob() : null)
           .then(blob => {
-            if (blob) document.getElementById('bodygraphImg').src = URL.createObjectURL(blob);
+            if (blob) {
+              document.getElementById('bodygraphImg').src = URL.createObjectURL(blob);
+            } else {
+              document.getElementById('bodygraphError').style.display = 'block';
+            }
           });
       }
 
@@ -404,7 +410,7 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.3 – Library View button now correctly loads specific designs', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.4 – View button now correctly loads specific saved designs', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
