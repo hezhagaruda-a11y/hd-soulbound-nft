@@ -17,29 +17,15 @@
     .header { max-width: 1280px; margin: 0 auto 30px; text-align: center; }
     h1 { font-size: 2.8rem; margin-bottom: 8px; }
     .subtitle { color: var(--muted); font-size: 1.1rem; }
-    
-    /* STORY: The tabs represent the four pillars of our intelligence engine */
-    .tabs { 
-      display: flex; 
-      gap: 8px; 
-      max-width: 1280px; 
-      margin: 0 auto 30px; 
-      border-bottom: 2px solid #222; 
-    }
+    .tabs { display: flex; gap: 8px; max-width: 1280px; margin: 0 auto 30px; border-bottom: 2px solid #222; }
     .tab {
       padding: 14px 28px;
       background: var(--card);
       border-radius: 12px 12px 0 0;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.3s;
     }
-    .tab.active { 
-      background: var(--accent); 
-      color: #000; 
-      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-    }
-
+    .tab.active { background: var(--accent); color: #000; }
     .content { max-width: 1280px; margin: 0 auto; }
     .card {
       background: var(--card);
@@ -70,7 +56,6 @@
       width: 100%;
     }
     button:hover { transform: translateY(-2px); }
-
     .bodygraph-container { text-align: center; margin-bottom: 32px; }
     .bodygraph-container img {
       max-width: 100%;
@@ -81,7 +66,6 @@
     table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; }
     th { color: var(--accent); }
-
     .planetary { display: flex; flex-direction: column; gap: 20px; }
     .side-header {
       font-size: 1.4rem;
@@ -111,21 +95,37 @@
     }
     .personality-side { color: #00ccff; }
     .design-side { color: #ff4444; }
-
     .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .design-card { background: #111; padding: 20px; border-radius: 16px; cursor: pointer; transition: all 0.3s; }
+    .design-card {
+      background: #111;
+      padding: 20px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
     .design-card:hover { transform: scale(1.03); }
+    .remove-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border-radius: 9999px;
+      cursor: pointer;
+    }
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="header">
-    <!-- STORY: This header carries the original vision – a living intelligence engine -->
     <h1>🌌 Human Design Group Intelligence</h1>
     <p class="subtitle">Enter birth data • Build your library • Unlock group &amp; penta resonance</p>
   </div>
 
-  <!-- STORY: The four tabs represent the complete journey of the engine -->
   <div class="tabs">
     <div class="tab active" data-tab="generate">Generate Blueprint</div>
     <div class="tab" data-tab="library">Library</div>
@@ -151,16 +151,13 @@
           <button id="saveBtn" style="width:auto;padding:10px 24px;font-size:1rem;">💾 Save to Library</button>
         </div>
 
-        <!-- STORY: BodyGraph is the visual heart – placed first as requested -->
         <div class="bodygraph-container">
           <img id="bodygraphImg" alt="BodyGraph" style="max-height:560px;">
           <p id="bodygraphError" style="color:#ff6666;margin-top:8px;display:none;">BodyGraph image could not be loaded.<br>Please try generating again.</p>
         </div>
 
-        <!-- Summary table -->
         <table id="summaryTable"></table>
 
-        <!-- Planetary sections – the energetic blueprint revealed -->
         <div class="planetary">
           <div>
             <div class="side-header personality-side">Personality (Black)</div>
@@ -177,7 +174,10 @@
     <!-- ====================== LIBRARY TAB ====================== -->
     <div id="library-tab" class="hidden">
       <div class="card">
-        <h2 style="margin-bottom:20px;">Your Design Library</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2>Your Design Library</h2>
+          <button onclick="clearLibrary()" style="width:auto;background:#ff4444;color:white;padding:8px 20px;font-size:0.95rem;">🗑️ Clear All Library</button>
+        </div>
         <div id="libraryGrid" class="library-grid"></div>
       </div>
     </div>
@@ -190,7 +190,7 @@
       </div>
     </div>
 
-    <!-- ====================== ALPHA POOL TAB (NEW) ====================== -->
+    <!-- ====================== ALPHA POOL TAB ====================== -->
     <div id="alpha-pool-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Alpha Pool</h2>
@@ -204,18 +204,17 @@
   </div>
 
   <script>
-    /* 
-      STORY OF THIS CODE
-      ==================
-      This single-file dashboard is the living heart of the Human Design Group Intelligence Engine.
+    /*
+      STORY OF THIS CODE – FOUNDATION v1.1
+      =====================================
+      This single HTML file is the living heart of our Human Design Group Intelligence Engine.
       
-      We began with a simple vision: turn raw birth data into deep personal insight, 
-      then weave many insights into powerful group intelligence.
+      We began with raw birth data → full blueprint.
+      We then added the ability to save many blueprints into a personal Library.
+      Now we give the Library true agency: you can view, remove (with confirmation), and clear everything.
       
-      Every line below carries that intention.
-      The code is intentionally clean, self-contained, and deeply documented 
-      so that anyone who opens it — today or years from now — can instantly understand 
-      the purpose, the journey, and the future we are building.
+      Every function below carries the same intention: sovereignty, clarity, and respect for the user's data.
+      The code is intentionally self-contained, richly documented, and built to evolve gracefully.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -224,27 +223,22 @@
     let currentData = null;
     let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
 
-    // ====================== TAB SYSTEM ======================
+    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        
-        // Hide all content panels
         document.getElementById('generate-tab').classList.add('hidden');
         document.getElementById('library-tab').classList.add('hidden');
         document.getElementById('compatibility-tab').classList.add('hidden');
         document.getElementById('alpha-pool-tab').classList.add('hidden');
-        
-        // Show the chosen panel
         document.getElementById(tab.dataset.tab + '-tab').classList.remove('hidden');
-        
         if (tab.dataset.tab === 'library') renderLibrary();
         if (tab.dataset.tab === 'compatibility') renderCompatibility();
       });
     });
 
-    // ====================== GENERATE BLUEPRINT ======================
+    // Generate Blueprint
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -265,7 +259,7 @@
         
         currentData = await res.json();
 
-        // Load BodyGraph with proper authentication (critical for the image to appear)
+        // BodyGraph with authentication
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         const imgRes = await fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
         if (imgRes.ok) {
@@ -330,7 +324,7 @@
       return row;
     }
 
-    // ====================== SAVE & LIBRARY ======================
+    // ====================== LIBRARY MANAGEMENT ======================
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
@@ -342,12 +336,26 @@
 
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
-      container.innerHTML = savedDesigns.length ? savedDesigns.map(d => `
-        <div class="design-card" onclick="viewDesign(${d.id})">
+      if (savedDesigns.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">Library empty — generate &amp; save some blueprints!</p>`;
+        return;
+      }
+      container.innerHTML = savedDesigns.map(d => `
+        <div class="design-card" onclick="viewDesign(${d.id});">
           <strong>${d.name}</strong><br>
-          <small style="color:var(--accent)">${d.data.general?.energy_type} • ${d.data.general?.profile}</small>
-        </div>`).join('') : `<p style="text-align:center;color:#888;padding:60px;">Library empty — generate & save some blueprints!</p>`;
+          <small style="color:var(--accent)">${d.data.general?.energy_type} • ${d.data.general?.inner_authority} • ${d.data.general?.profile}</small>
+          <button class="remove-btn" onclick="event.stopImmediatePropagation(); removeDesign(${d.id});">Remove</button>
+        </div>
+      `).join('');
     }
+
+    window.removeDesign = function(id) {
+      if (confirm("Are you sure you want to permanently remove this design from your library?")) {
+        savedDesigns = savedDesigns.filter(d => d.id !== id);
+        localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+        renderLibrary();
+      }
+    };
 
     window.viewDesign = function(id) {
       const design = savedDesigns.find(d => d.id === id);
@@ -358,19 +366,26 @@
       renderPlanetarySides();
     };
 
-    // ====================== GROUP COMPATIBILITY ======================
+    // Clear entire library with confirmation
+    window.clearLibrary = function() {
+      if (confirm("⚠️ This will permanently delete ALL designs from your library.\n\nAre you absolutely sure?")) {
+        savedDesigns = [];
+        localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+        renderLibrary();
+        alert("Library cleared.");
+      }
+    };
+
+    // ====================== OTHER TABS ======================
     function renderCompatibility() {
       const container = document.getElementById('compatibilityContent');
       container.innerHTML = `<p style="text-align:center;color:#aaa;padding:60px;">Penta group analysis coming in next small update.</p>`;
     }
 
-    // ====================== ALPHA POOL (placeholder for future evolution) ======================
-    // This tab will become our archive of the strongest energetic archetypes.
-
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.0 – Locked in and ready for evolution', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.1 – Library fully controllable', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
