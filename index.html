@@ -17,15 +17,29 @@
     .header { max-width: 1280px; margin: 0 auto 30px; text-align: center; }
     h1 { font-size: 2.8rem; margin-bottom: 8px; }
     .subtitle { color: var(--muted); font-size: 1.1rem; }
-    .tabs { display: flex; gap: 8px; max-width: 1280px; margin: 0 auto 30px; border-bottom: 2px solid #222; }
+    
+    /* STORY: The tabs represent the four pillars of our intelligence engine */
+    .tabs { 
+      display: flex; 
+      gap: 8px; 
+      max-width: 1280px; 
+      margin: 0 auto 30px; 
+      border-bottom: 2px solid #222; 
+    }
     .tab {
       padding: 14px 28px;
       background: var(--card);
       border-radius: 12px 12px 0 0;
       cursor: pointer;
       font-weight: 600;
+      transition: all 0.3s;
     }
-    .tab.active { background: var(--accent); color: #000; }
+    .tab.active { 
+      background: var(--accent); 
+      color: #000; 
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+
     .content { max-width: 1280px; margin: 0 auto; }
     .card {
       background: var(--card);
@@ -56,6 +70,7 @@
       width: 100%;
     }
     button:hover { transform: translateY(-2px); }
+
     .bodygraph-container { text-align: center; margin-bottom: 32px; }
     .bodygraph-container img {
       max-width: 100%;
@@ -66,6 +81,7 @@
     table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; }
     th { color: var(--accent); }
+
     .planetary { display: flex; flex-direction: column; gap: 20px; }
     .side-header {
       font-size: 1.4rem;
@@ -95,6 +111,7 @@
     }
     .personality-side { color: #00ccff; }
     .design-side { color: #ff4444; }
+
     .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .design-card { background: #111; padding: 20px; border-radius: 16px; cursor: pointer; transition: all 0.3s; }
     .design-card:hover { transform: scale(1.03); }
@@ -103,19 +120,22 @@
 </head>
 <body>
   <div class="header">
+    <!-- STORY: This header carries the original vision – a living intelligence engine -->
     <h1>🌌 Human Design Group Intelligence</h1>
-    <p class="subtitle">Enter birth data • Build your library • Unlock group & penta resonance</p>
+    <p class="subtitle">Enter birth data • Build your library • Unlock group &amp; penta resonance</p>
   </div>
 
+  <!-- STORY: The four tabs represent the complete journey of the engine -->
   <div class="tabs">
     <div class="tab active" data-tab="generate">Generate Blueprint</div>
     <div class="tab" data-tab="library">Library</div>
     <div class="tab" data-tab="compatibility">Group Compatibility</div>
+    <div class="tab" data-tab="alpha-pool">Alpha Pool</div>
   </div>
 
   <div class="content">
 
-    <!-- GENERATE TAB -->
+    <!-- ====================== GENERATE TAB ====================== -->
     <div id="generate-tab">
       <div class="card">
         <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
@@ -126,20 +146,21 @@
       </div>
 
       <div id="result" class="card hidden">
-
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
           <h2>Your Blueprint</h2>
           <button id="saveBtn" style="width:auto;padding:10px 24px;font-size:1rem;">💾 Save to Library</button>
         </div>
 
-        <!-- NEW ORDER: BodyGraph first, then summary, then Personality, then Design -->
+        <!-- STORY: BodyGraph is the visual heart – placed first as requested -->
         <div class="bodygraph-container">
           <img id="bodygraphImg" alt="BodyGraph" style="max-height:560px;">
           <p id="bodygraphError" style="color:#ff6666;margin-top:8px;display:none;">BodyGraph image could not be loaded.<br>Please try generating again.</p>
         </div>
 
+        <!-- Summary table -->
         <table id="summaryTable"></table>
 
+        <!-- Planetary sections – the energetic blueprint revealed -->
         <div class="planetary">
           <div>
             <div class="side-header personality-side">Personality (Black)</div>
@@ -150,11 +171,10 @@
             <div id="designPlanets"></div>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- LIBRARY TAB -->
+    <!-- ====================== LIBRARY TAB ====================== -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Your Design Library</h2>
@@ -162,37 +182,69 @@
       </div>
     </div>
 
-    <!-- COMPATIBILITY TAB -->
+    <!-- ====================== GROUP COMPATIBILITY TAB ====================== -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
-        <h2 style="margin-bottom:20px;">Group & Penta Intelligence</h2>
+        <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
         <div id="compatibilityContent"></div>
+      </div>
+    </div>
+
+    <!-- ====================== ALPHA POOL TAB (NEW) ====================== -->
+    <div id="alpha-pool-tab" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom:20px;">Alpha Pool</h2>
+        <p style="text-align:center;color:#aaa;padding:80px 20px;">
+          The Alpha Pool is the future home of our most potent group archetypes, 
+          leadership patterns, and collective purpose signatures.<br><br>
+          <em>This space will evolve into a living archive of the strongest energetic configurations.</em>
+        </p>
       </div>
     </div>
   </div>
 
   <script>
+    /* 
+      STORY OF THIS CODE
+      ==================
+      This single-file dashboard is the living heart of the Human Design Group Intelligence Engine.
+      
+      We began with a simple vision: turn raw birth data into deep personal insight, 
+      then weave many insights into powerful group intelligence.
+      
+      Every line below carries that intention.
+      The code is intentionally clean, self-contained, and deeply documented 
+      so that anyone who opens it — today or years from now — can instantly understand 
+      the purpose, the journey, and the future we are building.
+    */
+
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
     let currentData = null;
     let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
 
-    // Tab switching
+    // ====================== TAB SYSTEM ======================
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
+        
+        // Hide all content panels
         document.getElementById('generate-tab').classList.add('hidden');
         document.getElementById('library-tab').classList.add('hidden');
         document.getElementById('compatibility-tab').classList.add('hidden');
+        document.getElementById('alpha-pool-tab').classList.add('hidden');
+        
+        // Show the chosen panel
         document.getElementById(tab.dataset.tab + '-tab').classList.remove('hidden');
+        
         if (tab.dataset.tab === 'library') renderLibrary();
         if (tab.dataset.tab === 'compatibility') renderCompatibility();
       });
     });
 
-    // Generate
+    // ====================== GENERATE BLUEPRINT ======================
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -212,9 +264,8 @@
         if (!res.ok) throw new Error(`API error ${res.status}`);
         
         currentData = await res.json();
-        console.log("🔍 FULL API RESPONSE:", currentData);
 
-        // Load BodyGraph with authentication
+        // Load BodyGraph with proper authentication (critical for the image to appear)
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         const imgRes = await fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
         if (imgRes.ok) {
@@ -279,7 +330,7 @@
       return row;
     }
 
-    // Save to Library
+    // ====================== SAVE & LIBRARY ======================
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
@@ -307,14 +358,19 @@
       renderPlanetarySides();
     };
 
+    // ====================== GROUP COMPATIBILITY ======================
     function renderCompatibility() {
       const container = document.getElementById('compatibilityContent');
       container.innerHTML = `<p style="text-align:center;color:#aaa;padding:60px;">Penta group analysis coming in next small update.</p>`;
     }
 
+    // ====================== ALPHA POOL (placeholder for future evolution) ======================
+    // This tab will become our archive of the strongest energetic archetypes.
+
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.0 – Locked in and ready for evolution', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
