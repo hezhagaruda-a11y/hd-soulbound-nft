@@ -202,7 +202,7 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v1.6
+      STORY OF THIS CODE – FOUNDATION v1.7
       =====================================
       We have now reached a mature and beautiful foundation.
 
@@ -214,16 +214,17 @@
       - v1.4 : Clean side-by-side View + Remove buttons
       - v1.5 : Added person's Age in the Library cards
       - v1.6 : Added ON/OFF status toggle between View and Remove buttons
+      - v1.7 : Toggle now defaults to ON for new saves + clearly reflects actual status (green = ON, gray = OFF)
 
       The Library is now a fully functional, controllable archive.
       Each design has:
       • Name
       • Age + key Human Design info
       • View button (loads full blueprint + BodyGraph)
-      • Status toggle (ON/OFF) – ready for future Group Compatibility & Alpha Pool logic
+      • Status toggle (ON/OFF) – defaults to ON, clearly shows current state
       • Remove button with confirmation
 
-      This toggle will later be used to activate/deactivate people in group calculations, matching, or penta resonance.
+      This toggle is ready for future use in Group Compatibility (matching) and Alpha Pool (activation/filtering).
       The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
 
@@ -248,7 +249,7 @@
       });
     });
 
-    // Generate (unchanged)
+    // Generate
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -333,7 +334,7 @@
       return row;
     }
 
-    // Save to Library – stores birth data + default status ON
+    // Save to Library – defaults to ON
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
@@ -349,14 +350,14 @@
         name: name || "Untitled", 
         data: currentData,
         birth: birthData,
-        status: "ON"   // default status
+        status: "ON"   // explicit default ON
       });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
     });
 
-    // Render Library with Age + Status Toggle
+    // Render Library – toggle clearly shows current status
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
       if (savedDesigns.length === 0) {
@@ -366,8 +367,10 @@
       container.innerHTML = savedDesigns.map(d => {
         const g = d.data.general || {};
         const age = g.age ? `${g.age} ` : '';
+        // Ensure every design has a status (backwards compatibility)
+        if (!d.status) d.status = "ON";
         const statusClass = d.status === "ON" ? "status-btn on" : "status-btn";
-        const statusText = d.status === "ON" ? "ON" : "OFF";
+        const statusText = d.status;
         return `
           <div class="design-card">
             <div class="design-info">
@@ -445,7 +448,7 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.6 – Status toggle (ON/OFF) added between View and Remove', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.7 – Toggle now defaults to ON and clearly shows current status', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
