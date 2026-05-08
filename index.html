@@ -3,179 +3,490 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://humandesignapi-production-5a7b.up.railway.app https://api.pinata.cloud;">
-
-  <title>🌌 Design Control Dashboard • Soulbound Human Design</title>
+  <title>🌌 Human Design Group Intelligence</title>
   <style>
-    :root { --bg: #0a0a0a; --card: #141414; --accent: #10b981; --text: #f0f0f0; }
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 40px 16px; margin: 0; overflow-x: hidden; }
-    .container { max-width: 1280px; margin: 0 auto; }
-    h1 { text-align: center; font-size: 2.9rem; margin-bottom: 8px; }
-    .subtitle { text-align: center; color: #aaa; margin-bottom: 40px; }
-    .card { background: var(--card); padding: 28px; border-radius: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); margin-bottom: 32px; }
-    input, select, textarea { width: 100%; padding: 16px; margin-bottom: 16px; border-radius: 16px; border: 1px solid #333; background: #111; color: white; font-size: 1.1rem; }
-    button { padding: 18px; background: var(--accent); color: #000; border: none; border-radius: 16px; cursor: pointer; font-size: 1.25rem; font-weight: 700; width: 100%; transition: all 0.3s; }
-    button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(16,185,129,0.4); }
+    :root {
+      --bg: #0a0a0a;
+      --card: #141414;
+      --accent: #10b981;
+      --text: #f0f0f0;
+      --muted: #888;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    .header {
+      max-width: 1280px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+    h1 { font-size: 2.8rem; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 1.1rem; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      max-width: 1280px;
+      margin: 0 auto 30px;
+      border-bottom: 2px solid #222;
+    }
+    .tab {
+      padding: 14px 28px;
+      background: var(--card);
+      border-radius: 12px 12px 0 0;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    .content {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      margin-bottom: 24px;
+    }
+    input, select {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.05rem;
+    }
+    button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 18px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16,185,129,0.4); }
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .result-grid { grid-template-columns: 1fr; }
+    }
+    .bodygraph-container {
+      text-align: center;
+    }
+    .bodygraph-container img {
+      max-width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+    th { color: var(--accent); }
+    .planetary {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .side-header {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .planet-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #111;
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
+    .planet-symbol { font-size: 1.6rem; width: 32px; }
+    .gate { font-weight: 700; font-size: 1.2rem; }
+    .ctb-toggle {
+      background: #222;
+      color: #aaa;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .design-side { color: #ff4444; }
+    .personality-side { color: #00ccff; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .design-card {
+      background: #111;
+      padding: 20px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .design-card:hover { transform: scale(1.03); background: #1a1a1a; }
+    .penta-bar {
+      height: 12px;
+      background: #222;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .penta-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🌌 Design Control Dashboard</h1>
-    <p class="subtitle">Generate → IPFS → Soulbound NFT</p>
+  <div class="header">
+    <h1>🌌 Human Design Group Intelligence</h1>
+    <p class="subtitle">Enter birth data • Build your library • Unlock group &amp; penta resonance</p>
+  </div>
 
-    <div class="card">
-      <h3>📌 Pinata JWT (paste once)</h3>
-      <input type="password" id="pinataJWT" placeholder="eyJhbGciOi..." value="">
-      <button onclick="saveJWT()">Save JWT</button>
+  <div class="tabs">
+    <div class="tab active" data-tab="generate">Generate Blueprint</div>
+    <div class="tab" data-tab="library">Library</div>
+    <div class="tab" data-tab="compatibility">Group Compatibility</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ====================== GENERATE TAB ====================== -->
+    <div id="generate-tab">
+      <div class="card">
+        <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
+        <input type="date" id="birthDate">
+        <input type="time" id="birthTime" value="12:00">
+        <input type="text" id="birthPlace" placeholder="City, Country (e.g. Sulaymaniyah, Iraq)" value="Sulaymaniyah, Iraq">
+        <button id="generateBtn">Generate Human Design Blueprint</button>
+      </div>
+
+      <div id="result" class="card hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2>Your Blueprint</h2>
+          <button id="saveBtn" style="width:auto;padding:10px 24px;font-size:1rem;">💾 Save to Library</button>
+        </div>
+
+        <div class="result-grid">
+          <!-- Summary -->
+          <div>
+            <table id="summaryTable"></table>
+
+            <!-- Planetary Activations -->
+            <div class="planetary" style="margin-top:32px;">
+              <div class="side">
+                <div class="side-header personality-side"><span>☀️ Personality (Black)</span></div>
+                <div id="personalityPlanets"></div>
+              </div>
+              <div class="side">
+                <div class="side-header design-side"><span>🌙 Design (Red)</span></div>
+                <div id="designPlanets"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BodyGraph -->
+          <div class="bodygraph-container">
+            <img id="bodygraphImg" alt="BodyGraph" style="max-height:520px;">
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <input type="date" id="birthDate" value="1983-08-09">
-      <input type="time" id="birthTime" value="16:44">
-      <input type="text" id="birthPlace" value="Sulaymaniyah">
-      <button id="generateBtn">Generate Human Design Chart</button>
+    <!-- ====================== LIBRARY TAB ====================== -->
+    <div id="library-tab" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom:20px;">Your Design Library</h2>
+        <div id="libraryGrid" class="library-grid"></div>
+      </div>
     </div>
 
-    <div id="result" class="card" style="display:none;">
-      <h2>Your Human Design Blueprint</h2>
-      <table id="hdTable"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody></tbody></table>
-      <img id="bodygraph" alt="BodyGraph" style="max-width:100%; border-radius:24px; margin:40px auto; display:block; background:#111; padding:20px;">
-
-      <button id="uploadAndMintBtn" style="margin-top:12px;background:#10b981;">🌐 Upload to IPFS & Mint Soulbound NFT</button>
+    <!-- ====================== COMPATIBILITY TAB ====================== -->
+    <div id="compatibility-tab" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
+        <div id="compatibilityContent">
+          <p style="text-align:center;color:#888;padding:40px;">Add designs to your library to see group resonance and penta analysis.</p>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    // ================== CONFIG ==================
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
-    const CONTRACT_ADDRESS = "0x96Bf92f275F806A543C5885B9a325D0Cc697E707";
+
+    const PENTA_GATES = [15, 5, 46, 29, 14, 2, 1, 8, 7, 31, 13, 33];
+    const PENTA_PILLARS = [
+      { name: "15-5", gates: [15, 5] },
+      { name: "46-29", gates: [46, 29] },
+      { name: "14-2", gates: [14, 2] },
+      { name: "1-8", gates: [1, 8] },
+      { name: "7-31", gates: [7, 31] },
+      { name: "13-33", gates: [13, 33] }
+    ];
 
     let currentData = null;
-    let bodygraphBlob = null;
+    let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
 
-    document.getElementById("pinataJWT").value = localStorage.getItem("pinataJWT") || "";
+    // ================== TAB SWITCHING ==================
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.getElementById('generate-tab').classList.add('hidden');
+        document.getElementById('library-tab').classList.add('hidden');
+        document.getElementById('compatibility-tab').classList.add('hidden');
+        
+        document.getElementById(tab.dataset.tab + '-tab').classList.remove('hidden');
+        
+        if (tab.dataset.tab === 'library') renderLibrary();
+        if (tab.dataset.tab === 'compatibility') renderCompatibility();
+      });
+    });
 
-    window.saveJWT = () => {
-      const jwt = document.getElementById("pinataJWT").value.trim();
-      if (jwt) {
-        localStorage.setItem("pinataJWT", jwt);
-        alert("✅ Pinata JWT saved!");
-      }
-    };
-
-    document.getElementById("generateBtn").onclick = async () => {
-      const btn = document.getElementById("generateBtn");
-      btn.disabled = true; btn.textContent = "Generating...";
-
-      const [year, month, day] = document.getElementById("birthDate").value.split("-");
-      const [hour, minute] = document.getElementById("birthTime").value.split(":");
-      const place = document.getElementById("birthPlace").value || "Sulaymaniyah";
-
-      const params = new URLSearchParams({ year, month, day, hour, minute, place });
-
-      try {
-        const calcRes = await fetch(`${BACKEND_URL}/calculate?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
-        const data = await calcRes.json();
-
-        const imgRes = await fetch(`${BACKEND_URL}/bodygraph?${params}`, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` } });
-        bodygraphBlob = await imgRes.blob();
-        document.getElementById("bodygraph").src = URL.createObjectURL(bodygraphBlob);
-
-        const tbody = document.querySelector("#hdTable tbody");
-        tbody.innerHTML = `
-          <tr><td><strong>Energy Type</strong></td><td>${data.general?.energy_type || "—"}</td></tr>
-          <tr><td><strong>Strategy</strong></td><td>${data.general?.strategy || "—"}</td></tr>
-          <tr><td><strong>Authority</strong></td><td>${data.general?.inner_authority || "—"}</td></tr>
-          <tr><td><strong>Profile</strong></td><td>${data.general?.profile || "—"}</td></tr>
-          <tr><td><strong>Incarnation Cross</strong></td><td>${data.general?.inc_cross || "—"}</td></tr>
-        `;
-
-        currentData = data;
-        document.getElementById("result").style.display = "block";
-      } catch (e) {
-        alert("Error: " + e.message);
-      } finally {
-        btn.disabled = false; btn.textContent = "Generate Human Design Chart";
-      }
-    };
-
-    // Pure native mint (no external scripts)
-    document.getElementById("uploadAndMintBtn").onclick = async () => {
-      if (!currentData || !bodygraphBlob) return alert("Generate a chart first!");
-
-      const jwt = localStorage.getItem("pinataJWT");
-      if (!jwt) return alert("Please paste and save your Pinata JWT first!");
-
-      const btn = document.getElementById("uploadAndMintBtn");
+    // ================== GENERATE ==================
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('generateBtn');
+      btn.textContent = 'Calculating…';
       btn.disabled = true;
-      btn.textContent = "Uploading to IPFS...";
 
       try {
-        const formData = new FormData();
-        formData.append("file", bodygraphBlob, "bodygraph.png");
+        const date = document.getElementById('birthDate').value; // YYYY-MM-DD
+        const time = document.getElementById('birthTime').value; // HH:MM
+        const place = document.getElementById('birthPlace').value.trim();
 
-        const imageRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${jwt}` },
-          body: formData
+        if (!date || !time || !place) {
+          alert("Please fill in date, time and place");
+          return;
+        }
+
+        const [year, month, day] = date.split('-').map(Number);
+        const [hour, minute] = time.split(':').map(Number);
+
+        const url = `${BACKEND_URL}/calculate?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
+        
+        const res = await fetch(url, {
+          headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
         });
-        const imageData = await imageRes.json();
-        const imageCID = imageData.IpfsHash;
+        if (!res.ok) throw new Error("API error");
+        
+        currentData = await res.json();
 
-        const metadata = {
-          name: "Soulbound Human Design Blueprint",
-          description: "Permanent, non-transferable Human Design chart",
-          image: `ipfs://${imageCID}`,
-          attributes: currentData.general
-        };
+        // BodyGraph image (the API returns a direct image URL in many versions; fallback if needed)
+        const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
+        document.getElementById('bodygraphImg').src = imgUrl;
 
-        const jsonRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-          body: JSON.stringify(metadata)
-        });
-        const jsonData = await jsonRes.json();
-        const metadataCID = jsonData.IpfsHash;
-
-        const ipfsURI = `ipfs://${metadataCID}`;
-
-        // Pure native MetaMask mint
-        if (!window.ethereum) return alert("Please install MetaMask");
-
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        const from = accounts[0];
-
-        const functionSelector = "0x40c10f19";
-        const toPadded = from.toLowerCase().replace("0x", "").padStart(64, "0");
-        const offset = "0000000000000000000000000000000000000000000000000000000000000040";
-        const uriLengthHex = ipfsURI.length.toString(16).padStart(64, "0");
-        const uriBytes = new TextEncoder().encode(ipfsURI);
-        let uriDataHex = Array.from(uriBytes).map(b => b.toString(16).padStart(2, "0")).join("");
-
-        const paddingNeeded = (32 - (uriBytes.length % 32)) % 32;
-        uriDataHex += "0".repeat(paddingNeeded * 2);
-
-        const calldata = functionSelector + toPadded + offset + uriLengthHex + uriDataHex;
-
-        const txHash = await window.ethereum.request({
-          method: "eth_sendTransaction",
-          params: [{
-            from: from,
-            to: CONTRACT_ADDRESS,
-            data: calldata,
-            gas: "0x" + (400000).toString(16)
-          }]
-        });
-
-        btn.textContent = "✅ Minted!";
-        alert(`🎉 SUCCESS!\n\nIPFS URI: ${ipfsURI}\nTx hash: ${txHash}`);
+        renderSummary();
+        renderPlanetarySides();
+        document.getElementById('result').classList.remove('hidden');
       } catch (e) {
         console.error(e);
-        alert("Error: " + (e.message || e));
-        btn.textContent = "🌐 Upload to IPFS & Mint Soulbound NFT";
+        alert("Could not generate chart. Please check your input and try again.");
+      } finally {
+        btn.textContent = 'Generate Human Design Blueprint';
+        btn.disabled = false;
       }
+    });
+
+    function renderSummary() {
+      const g = currentData.general || {};
+      const html = `
+        <tr><td><strong>Energy Type</strong></td><td>${g.energy_type || '—'}</td></tr>
+        <tr><td><strong>Strategy</strong></td><td>${g.strategy || '—'}</td></tr>
+        <tr><td><strong>Authority</strong></td><td>${g.inner_authority || '—'}</td></tr>
+        <tr><td><strong>Profile</strong></td><td>${g.profile || '—'}</td></tr>
+        <tr><td><strong>Incarnation Cross</strong></td><td>${g.inc_cross || '—'}</td></tr>
+        <tr><td><strong>Definition</strong></td><td>${g.definition || '—'}</td></tr>
+      `;
+      document.getElementById('summaryTable').innerHTML = html;
+    }
+
+    function renderPlanetarySides() {
+      const pers = document.getElementById('personalityPlanets');
+      const des = document.getElementById('designPlanets');
+      pers.innerHTML = '';
+      des.innerHTML = '';
+
+      // Personality (black)
+      if (currentData.planets && currentData.planets.personality) {
+        currentData.planets.personality.forEach(p => {
+          const row = createPlanetRow(p, 'personality-side');
+          pers.appendChild(row);
+        });
+      }
+      // Design (red)
+      if (currentData.planets && currentData.planets.design) {
+        currentData.planets.design.forEach(p => {
+          const row = createPlanetRow(p, 'design-side');
+          des.appendChild(row);
+        });
+      }
+    }
+
+    function createPlanetRow(planet, sideClass) {
+      const row = document.createElement('div');
+      row.className = `planet-row ${sideClass}`;
+      const symbol = {
+        Sun: "☉", Earth: "⊕", Moon: "☽", North_Node: "☊", South_Node: "☋",
+        Mercury: "☿", Venus: "♀", Mars: "♂", Jupiter: "♃", Saturn: "♄",
+        Uranus: "♅", Neptune: "♆", Pluto: "♇"
+      }[planet.Planet] || "★";
+
+      const gateLine = `${planet.Gate}.${planet.Line}`;
+      const ctb = `C${planet.Color} T${planet.Tone} B${planet.Base}`;
+
+      row.innerHTML = `
+        <span class="planet-symbol">${symbol}</span>
+        <span class="gate">${gateLine}</span>
+        <button class="ctb-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">+ C/T/B</button>
+        <span class="hidden" style="margin-left:8px;font-size:0.95rem;color:#aaa;">${ctb}</span>
+      `;
+      return row;
+    }
+
+    // ================== SAVE TO LIBRARY ==================
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      if (!currentData) return;
+      const name = prompt("Name this design (e.g. Sarah – Project Manager)", currentData.general?.energy_type || "Untitled");
+      savedDesigns.push({
+        id: Date.now(),
+        name: name || "Untitled Design",
+        data: currentData
+      });
+      localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      alert("✅ Saved to Library");
+      renderLibrary();
+    });
+
+    function renderLibrary() {
+      const container = document.getElementById('libraryGrid');
+      if (savedDesigns.length === 0) {
+        container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;padding:60px;">Your library is empty.<br>Generate and save some blueprints!</p>`;
+        return;
+      }
+      container.innerHTML = savedDesigns.map(d => `
+        <div class="design-card" onclick="viewDesign(${d.id})">
+          <strong>${d.name}</strong><br>
+          <span style="color:var(--accent);">${d.data.general?.energy_type || '—'} • ${d.data.general?.profile || '—'}</span>
+          <div style="margin-top:12px;font-size:0.9rem;color:#aaa;">Click to view full blueprint</div>
+        </div>
+      `).join('');
+    }
+
+    window.viewDesign = function(id) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      currentData = design.data;
+      // Switch to generate tab and show the blueprint
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('[data-tab="generate"]').classList.add('active');
+      document.getElementById('generate-tab').classList.remove('hidden');
+      document.getElementById('library-tab').classList.add('hidden');
+      document.getElementById('compatibility-tab').classList.add('hidden');
+      renderSummary();
+      renderPlanetarySides();
+      document.getElementById('bodygraphImg').src = `${BACKEND_URL}/bodygraph?year=${design.data.general.birth_date.split('-')[0]}&month=${design.data.general.birth_date.split('-')[1]}&day=${design.data.general.birth_date.split('-')[2]}&hour=12&minute=00&place=${encodeURIComponent(design.data.general.place || 'Unknown')}`;
+      document.getElementById('result').classList.remove('hidden');
+    };
+
+    // ================== GROUP COMPATIBILITY ==================
+    function calculatePentaStats(data) {
+      if (!data || !data.planets) return { gates: 0, pillars: 0 };
+      const allGates = new Set();
+      
+      // Collect all activated gates (both personality + design)
+      if (data.planets.personality) data.planets.personality.forEach(p => allGates.add(p.Gate));
+      if (data.planets.design) data.planets.design.forEach(p => allGates.add(p.Gate));
+
+      const activatedGates = Array.from(allGates).filter(g => PENTA_GATES.includes(g)).length;
+
+      let activatedPillars = 0;
+      PENTA_PILLARS.forEach(pillar => {
+        const hasBoth = pillar.gates.every(g => allGates.has(g));
+        if (hasBoth) activatedPillars++;
+      });
+
+      return { gates: activatedGates, pillars: activatedPillars };
+    }
+
+    function renderCompatibility() {
+      const container = document.getElementById('compatibilityContent');
+      if (savedDesigns.length < 1) {
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">Add at least one design to see group intelligence.</p>`;
+        return;
+      }
+
+      let rowsHTML = savedDesigns.map(d => {
+        const stats = calculatePentaStats(d.data);
+        const score = Math.round((stats.gates / 12) * 100 + (stats.pillars / 6) * 50);
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#111;padding:16px;border-radius:12px;margin-bottom:12px;">
+            <div>
+              <strong>${d.name}</strong><br>
+              <small style="color:#aaa;">${d.data.general?.energy_type} • ${d.data.general?.profile}</small>
+            </div>
+            <div style="text-align:right;">
+              <div><strong>${stats.gates}/12</strong> Penta Gates</div>
+              <div class="penta-bar"><div class="penta-fill" style="width:${(stats.gates/12)*100}%"></div></div>
+              <div><strong>${stats.pillars}/6</strong> Activated Pillars</div>
+              <div style="font-size:1.4rem;color:var(--accent);margin-top:4px;">${score}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = `
+        <h3 style="margin-bottom:16px;">Penta Resonance Ranking</h3>
+        ${rowsHTML}
+        <p style="margin-top:24px;font-size:0.9rem;color:#666;">Higher score = stronger contribution to group penta field.<br>Build your team, family or project lattice here.</p>
+      `;
+    }
+
+    // ================== INITIAL RENDER ==================
+    window.onload = () => {
+      renderLibrary();
+      renderCompatibility();
+      console.log('%c🌌 Group & Penta Intelligence Dashboard ready', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
