@@ -98,21 +98,23 @@
       background: #111;
       padding: 20px;
       border-radius: 16px;
-      position: relative;
     }
     .design-info { margin-bottom: 16px; }
     .library-actions {
       display: flex;
       gap: 8px;
     }
-    .view-btn, .remove-btn {
+    .view-btn, .status-btn, .remove-btn {
       flex: 1;
       padding: 10px;
       font-size: 0.95rem;
       border-radius: 9999px;
       cursor: pointer;
+      font-weight: 600;
     }
     .view-btn { background: var(--accent); color: #000; }
+    .status-btn { background: #222; color: #aaa; }
+    .status-btn.on { background: #10b981; color: #000; }
     .remove-btn { background: #ff4444; color: white; }
     .hidden { display: none; }
   </style>
@@ -200,25 +202,29 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v1.5
+      STORY OF THIS CODE – FOUNDATION v1.6
       =====================================
       We have now reached a mature and beautiful foundation.
 
-      This single HTML file is the living heart of our Human Design Group Intelligence Engine.
-      
       Journey so far:
       - v1.0 : First clean dashboard with Generate, BodyGraph, and planetary rows
       - v1.1 : Library + Save functionality
       - v1.2 : Remove button with confirmation
       - v1.3 : View button correctly loads specific saved designs
       - v1.4 : Clean side-by-side View + Remove buttons
-      - v1.5 : Added person's Age in the Library cards (as requested)
+      - v1.5 : Added person's Age in the Library cards
+      - v1.6 : Added ON/OFF status toggle between View and Remove buttons
 
-      The Library is now fully functional, safe, and intuitive.
-      Every save, view, and removal is handled with care and confirmation prompts.
+      The Library is now a fully functional, controllable archive.
+      Each design has:
+      • Name
+      • Age + key Human Design info
+      • View button (loads full blueprint + BodyGraph)
+      • Status toggle (ON/OFF) – ready for future Group Compatibility & Alpha Pool logic
+      • Remove button with confirmation
 
-      We will continue to evolve the other tabs (Group Compatibility, Alpha Pool, etc.) 
-      on top of this strong, clean, well-documented foundation.
+      This toggle will later be used to activate/deactivate people in group calculations, matching, or penta resonance.
+      The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -327,7 +333,7 @@
       return row;
     }
 
-    // Save to Library
+    // Save to Library – stores birth data + default status ON
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
@@ -342,14 +348,15 @@
         id: Date.now(), 
         name: name || "Untitled", 
         data: currentData,
-        birth: birthData 
+        birth: birthData,
+        status: "ON"   // default status
       });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
     });
 
-    // Render Library with Age added
+    // Render Library with Age + Status Toggle
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
       if (savedDesigns.length === 0) {
@@ -359,6 +366,8 @@
       container.innerHTML = savedDesigns.map(d => {
         const g = d.data.general || {};
         const age = g.age ? `${g.age} ` : '';
+        const statusClass = d.status === "ON" ? "status-btn on" : "status-btn";
+        const statusText = d.status === "ON" ? "ON" : "OFF";
         return `
           <div class="design-card">
             <div class="design-info">
@@ -367,12 +376,21 @@
             </div>
             <div class="library-actions">
               <button class="view-btn" onclick="viewDesign(${d.id}); event.stopImmediatePropagation();">👁️ View</button>
+              <button class="${statusClass}" onclick="toggleStatus(${d.id}); event.stopImmediatePropagation();">${statusText}</button>
               <button class="remove-btn" onclick="removeDesign(${d.id}); event.stopImmediatePropagation();">🗑️ Remove</button>
             </div>
           </div>
         `;
       }).join('');
     }
+
+    window.toggleStatus = function(id) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      design.status = design.status === "ON" ? "OFF" : "ON";
+      localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      renderLibrary();
+    };
 
     window.removeDesign = function(id) {
       if (confirm("Are you sure you want to permanently remove this design from your library?")) {
@@ -427,7 +445,7 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.5 – Age now shown in Library cards', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.6 – Status toggle (ON/OFF) added between View and Remove', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
