@@ -56,22 +56,17 @@
       width: 100%;
     }
     button:hover { transform: translateY(-2px); }
-    .result-grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 24px;
-    }
-    @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr; } }
-    .bodygraph-container { text-align: center; }
+    .bodygraph-container { text-align: center; margin-bottom: 32px; }
     .bodygraph-container img {
       max-width: 100%;
+      max-height: 560px;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; }
     th { color: var(--accent); }
-    .planetary { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
+    .planetary { display: flex; flex-direction: column; gap: 20px; }
     .side-header {
       font-size: 1.4rem;
       font-weight: 700;
@@ -120,6 +115,7 @@
 
   <div class="content">
 
+    <!-- GENERATE TAB -->
     <div id="generate-tab">
       <div class="card">
         <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
@@ -130,35 +126,35 @@
       </div>
 
       <div id="result" class="card hidden">
+
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
           <h2>Your Blueprint</h2>
           <button id="saveBtn" style="width:auto;padding:10px 24px;font-size:1rem;">💾 Save to Library</button>
         </div>
 
-        <div class="result-grid">
+        <!-- NEW ORDER: BodyGraph first, then summary, then Personality, then Design -->
+        <div class="bodygraph-container">
+          <img id="bodygraphImg" alt="BodyGraph" style="max-height:560px;">
+          <p id="bodygraphError" style="color:#ff6666;margin-top:8px;display:none;">BodyGraph image could not be loaded.<br>Please try generating again.</p>
+        </div>
+
+        <table id="summaryTable"></table>
+
+        <div class="planetary">
           <div>
-            <table id="summaryTable"></table>
-
-            <div class="planetary">
-              <div>
-                <div class="side-header personality-side">Personality (Black)</div>
-                <div id="personalityPlanets"></div>
-              </div>
-              <div>
-                <div class="side-header design-side">Design (Red)</div>
-                <div id="designPlanets"></div>
-              </div>
-            </div>
+            <div class="side-header personality-side">Personality (Black)</div>
+            <div id="personalityPlanets"></div>
           </div>
-
-          <div class="bodygraph-container">
-            <img id="bodygraphImg" alt="BodyGraph" style="max-height:520px;">
-            <p id="bodygraphError" style="color:#ff6666;margin-top:8px;display:none;">BodyGraph image could not be loaded.<br>Please try generating again.</p>
+          <div>
+            <div class="side-header design-side">Design (Red)</div>
+            <div id="designPlanets"></div>
           </div>
         </div>
+
       </div>
     </div>
 
+    <!-- LIBRARY TAB -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Your Design Library</h2>
@@ -166,6 +162,7 @@
       </div>
     </div>
 
+    <!-- COMPATIBILITY TAB -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Group & Penta Intelligence</h2>
@@ -195,6 +192,7 @@
       });
     });
 
+    // Generate
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -216,15 +214,12 @@
         currentData = await res.json();
         console.log("🔍 FULL API RESPONSE:", currentData);
 
-        // Load BodyGraph with auth token (this was the missing piece)
+        // Load BodyGraph with authentication
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
-        console.log("📸 BodyGraph URL:", imgUrl);
-
         const imgRes = await fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
         if (imgRes.ok) {
           const blob = await imgRes.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          document.getElementById('bodygraphImg').src = objectUrl;
+          document.getElementById('bodygraphImg').src = URL.createObjectURL(blob);
         } else {
           document.getElementById('bodygraphError').style.display = 'block';
         }
@@ -284,7 +279,7 @@
       return row;
     }
 
-    // Save & Library
+    // Save to Library
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
