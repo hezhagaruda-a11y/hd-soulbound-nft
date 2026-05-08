@@ -194,7 +194,7 @@
       </div>
     </div>
 
-    <!-- GROUP COMPATIBILITY TAB (NEW in v1.8) -->
+    <!-- GROUP COMPATIBILITY TAB (v1.9) -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
@@ -216,7 +216,7 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v1.8
+      STORY OF THIS CODE – FOUNDATION v1.9
       =====================================
       We have now reached a mature and beautiful foundation.
 
@@ -230,15 +230,15 @@
       - v1.6 : Added ON/OFF status toggle between View and Remove buttons
       - v1.7 : Toggle now defaults to ON and clearly shows current status
       - v1.8 : Group Compatibility tab is now fully live and intelligent
+      - v1.9 : Group Compatibility is now ranked highest-to-lowest score + gentle green View button on each card
 
-      The Group Compatibility tab only analyses designs that are toggled ON.
-      It calculates:
-      • Penta Gates activated (out of 12 key gates)
-      • Penta Pillars activated (out of 6 actual channels)
-      • Visual progress bars and overall resonance score
-      • Ranked list of active contributors to the group field
+      The Group Compatibility tab now:
+      • Only analyses designs toggled ON
+      • Ranks them from highest to lowest resonance score
+      • Includes a gentle green "👁️ View" button that opens the full blueprint + BodyGraph
+      • Maintains the clean, elegant layout you loved
 
-      This tab is the living heart of group intelligence — the reason we started this entire project.
+      This tab is the living heart of group intelligence — the original reason we started this entire project.
       The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
 
@@ -359,7 +359,7 @@
       return row;
     }
 
-    // Save to Library – defaults to ON
+    // Save to Library
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
@@ -464,7 +464,7 @@
       }
     };
 
-    // ====================== GROUP COMPATIBILITY TAB ======================
+    // ====================== GROUP COMPATIBILITY TAB (v1.9) ======================
     function calculatePentaStats(data) {
       if (!data || !data.gates) return { gates: 0, pillars: 0, score: 0 };
 
@@ -486,12 +486,19 @@
 
     function renderCompatibility() {
       const container = document.getElementById('compatibilityContent');
-      const activeDesigns = savedDesigns.filter(d => d.status === "ON");
+      let activeDesigns = savedDesigns.filter(d => d.status === "ON");
 
       if (activeDesigns.length === 0) {
         container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No active designs.<br>Toggle some designs to ON in the Library to see group resonance.</p>`;
         return;
       }
+
+      // v1.9: Sort by score descending (highest first)
+      activeDesigns = activeDesigns.sort((a, b) => {
+        const scoreA = calculatePentaStats(a.data).score;
+        const scoreB = calculatePentaStats(b.data).score;
+        return scoreB - scoreA;
+      });
 
       let html = `<h3 style="margin-bottom:16px;">Active Group Resonance</h3>`;
 
@@ -501,6 +508,7 @@
           <div style="margin-bottom:20px;background:#111;padding:16px;border-radius:12px;">
             <strong>${d.name}</strong><br>
             <small style="color:#aaa;">${d.data.general?.energy_type} • ${d.data.general?.profile}</small>
+            
             <div style="margin-top:12px;">
               <div>Penta Gates: <strong>${stats.gates}/12</strong></div>
               <div class="penta-bar"><div class="penta-fill" style="width:${(stats.gates/12)*100}%"></div></div>
@@ -508,6 +516,11 @@
               <div class="penta-bar"><div class="penta-fill" style="width:${(stats.pillars/6)*100}%"></div></div>
               <div style="margin-top:8px;font-size:1.4rem;color:var(--accent);">Score: ${stats.score}</div>
             </div>
+
+            <!-- Gentle green View button -->
+            <button onclick="viewDesign(${d.id});" style="margin-top:16px;width:100%;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
+              👁️ View Full Blueprint
+            </button>
           </div>`;
       });
 
@@ -517,7 +530,7 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.8 – Group Compatibility tab now fully active', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.9 – Group Compatibility ranked highest-to-lowest + green View button', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
