@@ -117,7 +117,6 @@
     .status-btn.on { background: #10b981; color: #000; }
     .remove-btn { background: #ff4444; color: white; }
 
-    /* Group Compatibility & Approved Candidates styling */
     .penta-bar {
       height: 12px;
       background: #222;
@@ -202,7 +201,7 @@
       </div>
     </div>
 
-    <!-- APPROVED CANDIDATES TAB (renamed from Alpha Pool) -->
+    <!-- APPROVED CANDIDATES TAB -->
     <div id="approved-candidates-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Approved Candidates</h2>
@@ -213,7 +212,7 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v1.10
+      STORY OF THIS CODE – FOUNDATION v1.11
       =====================================
       We have now reached a mature and beautiful foundation.
 
@@ -228,13 +227,16 @@
       - v1.7 : Toggle now defaults to ON and clearly shows current status
       - v1.8 : Group Compatibility tab is now fully live and intelligent
       - v1.9 : Group Compatibility ranked highest-to-lowest + green View button
-      - v1.10: Added "Approve" button (50/50 with View) in Group Compatibility with confirmation prompt.
-               Approved designs are moved to the new "Approved Candidates" tab.
+      - v1.10: Added 50/50 "View" + "Approve" buttons in Group Compatibility
+      - v1.11: Changing status to OFF in Library now automatically resets approved status and removes it from Approved Candidates tab.
+               Approved Candidates now shows the same detailed line (with Age) as the Library tab.
 
-      The flow is now complete:
-      Generate → Save to Library → Toggle ON → View in Group Compatibility → Approve (with confirmation) → appears in Approved Candidates.
+      The system is now fully consistent and intelligent:
+      - Toggle OFF in Library → instantly removed from Group Compatibility and Approved Candidates
+      - Approve only works for designs that are ON
+      - All tabs stay perfectly in sync
 
-      This toggle + Approve system is the foundation for future matching, team building, and penta resonance logic.
+      This toggle + approve flow is the core mechanism that will power future matching, team building, and penta resonance logic.
       The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
 
@@ -270,7 +272,7 @@
       });
     });
 
-    // Generate
+    // Generate (unchanged)
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.textContent = 'Calculating…';
@@ -410,9 +412,17 @@
     window.toggleStatus = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
+      
+      // IMPORTANT: Changing to OFF resets approved status
+      if (design.status === "ON") {
+        design.approved = false;
+      }
+      
       design.status = design.status === "ON" ? "OFF" : "ON";
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       renderLibrary();
+      renderCompatibility();
+      renderApprovedCandidates();
     };
 
     window.removeDesign = function(id) {
@@ -420,6 +430,8 @@
         savedDesigns = savedDesigns.filter(d => d.id !== id);
         localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
         renderLibrary();
+        renderCompatibility();
+        renderApprovedCandidates();
       }
     };
 
@@ -456,6 +468,8 @@
         savedDesigns = [];
         localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
         renderLibrary();
+        renderCompatibility();
+        renderApprovedCandidates();
         alert("Library cleared.");
       }
     };
@@ -542,7 +556,7 @@
     // ====================== APPROVED CANDIDATES TAB ======================
     function renderApprovedCandidates() {
       const container = document.getElementById('approvedContent');
-      const approvedDesigns = savedDesigns.filter(d => d.approved === true);
+      const approvedDesigns = savedDesigns.filter(d => d.approved === true && d.status === "ON");
 
       if (approvedDesigns.length === 0) {
         container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No approved candidates yet.<br>Go to Group Compatibility and approve some designs.</p>`;
@@ -553,11 +567,12 @@
 
       approvedDesigns.forEach(d => {
         const g = d.data.general || {};
+        const age = g.age ? `${g.age} ` : '';
         html += `
           <div style="margin-bottom:16px;background:#111;padding:16px;border-radius:12px;">
             <strong>${d.name}</strong><br>
-            <small style="color:#aaa;">${g.energy_type} • ${g.profile}</small>
-            <div style="margin-top:8px;">
+            <small style="color:#aaa;">${age}${g.energy_type} • ${g.inner_authority} • ${g.profile}</small>
+            <div style="margin-top:12px;">
               <button onclick="viewDesign(${d.id});" style="width:100%;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">
                 👁️ View Full Blueprint
               </button>
@@ -572,7 +587,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.10 – Approve button added + Approved Candidates tab live', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.11 – OFF status now resets approved flag + consistent detailed info in Approved Candidates', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
