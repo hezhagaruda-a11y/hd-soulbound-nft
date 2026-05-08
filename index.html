@@ -93,7 +93,7 @@
     .personality-side { color: #00ccff; }
     .design-side { color: #ff4444; }
 
-    .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     .design-card {
       background: #111;
       padding: 20px;
@@ -114,7 +114,6 @@
     }
     .view-btn { background: var(--accent); color: #000; }
     .remove-btn { background: #ff4444; color: white; }
-
     .hidden { display: none; }
   </style>
 </head>
@@ -133,7 +132,7 @@
 
   <div class="content">
 
-    <!-- GENERATE TAB (unchanged) -->
+    <!-- GENERATE TAB -->
     <div id="generate-tab">
       <div class="card">
         <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
@@ -169,7 +168,7 @@
       </div>
     </div>
 
-    <!-- LIBRARY TAB – Now with View + Remove buttons -->
+    <!-- LIBRARY TAB – Fixed & Clean -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -200,21 +199,6 @@
   </div>
 
   <script>
-    /*
-      STORY OF THIS CODE – FOUNDATION v1.2
-      =====================================
-      We have now reached a clean, mature foundation.
-      
-      The Library is fully functional:
-      - Save from Generate tab
-      - View any design (opens full blueprint)
-      - Remove individual designs with confirmation
-      - Clear entire library with confirmation
-      
-      The UI is now intuitive and safe — no more accidental removals.
-      Every future tab (Group Compatibility, Alpha Pool, etc.) will build on this stable core.
-    */
-
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
@@ -321,17 +305,30 @@
       return row;
     }
 
-    // Save from Generate tab
+    // Save to Library – now also stores birth parameters for correct BodyGraph reload
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
-      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
+      
+      // Store birth parameters so View can correctly reload BodyGraph
+      const birthData = {
+        date: document.getElementById('birthDate').value,
+        time: document.getElementById('birthTime').value,
+        place: document.getElementById('birthPlace').value
+      };
+
+      savedDesigns.push({ 
+        id: Date.now(), 
+        name: name || "Untitled", 
+        data: currentData,
+        birth: birthData 
+      });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
     });
 
-    // Render Library with View + Remove buttons
+    // Render Library with clean View + Remove buttons
     function renderLibrary() {
       const container = document.getElementById('libraryGrid');
       if (savedDesigns.length === 0) {
@@ -363,10 +360,31 @@
     window.viewDesign = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
+
       currentData = design.data;
+
+      // Switch to Generate tab and show the result
       document.querySelector('[data-tab="generate"]').click();
+
+      // Re-render everything for the selected design
       renderSummary();
       renderPlanetarySides();
+
+      // Re-load the correct BodyGraph for this specific birth data
+      if (design.birth) {
+        const [year, month, day] = design.birth.date.split('-').map(Number);
+        const [hour, minute] = design.birth.time.split(':').map(Number);
+        const place = design.birth.place || "Unknown";
+
+        const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
+        const imgRes = fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }})
+          .then(res => res.ok ? res.blob() : null)
+          .then(blob => {
+            if (blob) document.getElementById('bodygraphImg').src = URL.createObjectURL(blob);
+          });
+      }
+
+      document.getElementById('result').classList.remove('hidden');
     };
 
     window.clearLibrary = function() {
@@ -386,7 +404,7 @@
     window.onload = () => {
       renderLibrary();
       renderCompatibility();
-      console.log('%c🌌 Human Design Group Intelligence Foundation v1.2 – Library fully controllable with View + Remove', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group Intelligence Foundation v1.3 – Library View button now correctly loads specific designs', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
