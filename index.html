@@ -96,8 +96,6 @@
     .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .design-card { background: #111; padding: 20px; border-radius: 16px; cursor: pointer; transition: all 0.3s; }
     .design-card:hover { transform: scale(1.03); }
-    .penta-bar { height: 12px; background: #222; border-radius: 9999px; overflow: hidden; margin: 8px 0; }
-    .penta-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); }
     .hidden { display: none; }
   </style>
 </head>
@@ -132,11 +130,9 @@
         </div>
 
         <div class="result-grid">
-          <!-- Summary -->
           <div>
             <table id="summaryTable"></table>
 
-            <!-- Planetary -->
             <div class="planetary">
               <div>
                 <div class="side-header personality-side">☀️ Personality (Black)</div>
@@ -149,16 +145,15 @@
             </div>
           </div>
 
-          <!-- BodyGraph -->
           <div class="bodygraph-container">
             <img id="bodygraphImg" alt="BodyGraph" style="max-height:520px;">
-            <p id="bodygraphError" style="color:#ff4444;margin-top:8px;display:none;">BodyGraph image could not be loaded. Please try generating again.</p>
+            <p id="bodygraphError" style="color:#ff6666;margin-top:8px;display:none;">BodyGraph image could not be loaded.<br>Please try generating again.</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- LIBRARY & COMPATIBILITY tabs (unchanged, same as before) -->
+    <!-- Library & Compatibility tabs -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Your Design Library</h2>
@@ -181,7 +176,7 @@
     let currentData = null;
     let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
 
-    // Tab switching (same as before)
+    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -203,32 +198,35 @@
 
       try {
         const dateStr = document.getElementById('birthDate').value;
+        if (!dateStr) throw new Error("Please select a date");
+
         const [year, month, day] = dateStr.split('-').map(Number);
         const [hour, minute] = document.getElementById('birthTime').value.split(':').map(Number);
-        const place = document.getElementById('birthPlace').value.trim();
+        const place = document.getElementById('birthPlace').value.trim() || "Unknown";
 
         const url = `${BACKEND_URL}/calculate?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         
-        const res = await fetch(url, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
-        if (!res.ok) throw new Error("API error");
+        const res = await fetch(url, {
+          headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }
+        });
+
+        if (!res.ok) throw new Error(`API error ${res.status}`);
         
         currentData = await res.json();
-        console.log("🔍 Full API response structure:", currentData);   // ← Open DevTools → Console to see this
+        console.log("🔍 FULL API RESPONSE:", currentData);   // ← Open DevTools → Console and copy this
 
         // BodyGraph
         const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
         const img = document.getElementById('bodygraphImg');
         img.src = imgUrl;
-        img.onerror = () => {
-          document.getElementById('bodygraphError').style.display = 'block';
-        };
+        img.onerror = () => document.getElementById('bodygraphError').style.display = 'block';
 
         renderSummary();
         renderPlanetarySides();
         document.getElementById('result').classList.remove('hidden');
       } catch (e) {
         console.error(e);
-        alert("Could not generate chart. Check console for details.");
+        alert("Generation failed. Check console (F12) for details.");
       } finally {
         btn.textContent = 'Generate Human Design Blueprint';
         btn.disabled = false;
@@ -254,7 +252,7 @@
       pers.innerHTML = '';
       des.innerHTML = '';
 
-      // Try multiple possible paths the API might return
+      // Try every possible location the API might put the planets
       let personality = currentData.planets?.personality || currentData.personality || currentData.general?.planets?.personality || [];
       let design = currentData.planets?.design || currentData.design || currentData.general?.planets?.design || [];
 
@@ -265,10 +263,10 @@
     function createPlanetRow(p, sideClass) {
       const row = document.createElement('div');
       row.className = `planet-row ${sideClass}`;
-      const symbolMap = {Sun:"☉",Earth:"⊕",Moon:"☽",North_Node:"☊",South_Node:"☋",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇"};
+      const symbolMap = {Sun:"☉",Earth:"⊕",Moon:"☽","North Node":"☊","South Node":"☋",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇"};
       const symbol = symbolMap[p.Planet] || "★";
-      const gateLine = `${p.Gate}.${p.Line}`;
-      const ctb = `C${p.Color} T${p.Tone} B${p.Base}`;
+      const gateLine = `${p.Gate || '?'}.${p.Line || '?'}`;
+      const ctb = `C${p.Color||'?'} T${p.Tone||'?'} B${p.Base||'?'}`;
 
       row.innerHTML = `
         <span class="planet-symbol">${symbol}</span>
@@ -279,13 +277,13 @@
       return row;
     }
 
-    // Save, Library, Compatibility (unchanged from previous version)
+    // Save to Library, View, Compatibility (same as before)
     document.getElementById('saveBtn').addEventListener('click', () => {
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
-      alert("✅ Saved to Library");
+      alert("✅ Saved!");
       renderLibrary();
     });
 
@@ -295,7 +293,7 @@
         <div class="design-card" onclick="viewDesign(${d.id})">
           <strong>${d.name}</strong><br>
           <small style="color:var(--accent)">${d.data.general?.energy_type} • ${d.data.general?.profile}</small>
-        </div>`).join('') : `<p style="text-align:center;color:#888;padding:60px;">Your library is empty.<br>Generate and save blueprints!</p>`;
+        </div>`).join('') : `<p style="text-align:center;color:#888;padding:60px;">Library empty — generate & save some blueprints!</p>`;
     }
 
     window.viewDesign = function(id) {
@@ -305,13 +303,11 @@
       document.querySelector('[data-tab="generate"]').click();
       renderSummary();
       renderPlanetarySides();
-      const img = document.getElementById('bodygraphImg');
-      img.src = `${BACKEND_URL}/bodygraph?year=${design.data.general.birth_date.split('-')[0]}&month=${design.data.general.birth_date.split('-')[1]}&day=${design.data.general.birth_date.split('-')[2]}&hour=12&minute=00&place=${encodeURIComponent(design.data.general.place || '')}`;
     };
 
-    function renderCompatibility() { /* same as previous version – unchanged */ 
+    function renderCompatibility() {
       const container = document.getElementById('compatibilityContent');
-      container.innerHTML = savedDesigns.length ? `<p style="text-align:center;color:#aaa;">Penta compatibility engine ready (coming in next small update).</p>` : `<p style="text-align:center;color:#888;padding:60px;">Add designs to see group resonance.</p>`;
+      container.innerHTML = `<p style="text-align:center;color:#aaa;padding:60px;">Penta group analysis coming in next small update.</p>`;
     }
 
     window.onload = () => {
