@@ -265,6 +265,7 @@
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
     // COMPLETE Gate Lookup - All 64 gates with names and 6 lines (from your Google Sheets)
+    
 const gateLookup = {
   1: { name: "The Creative", alt: "The Gate of Self-Expression", lines: {1: "Creation is independent of will", 2: "Love is light", 3: "The energy to sustain creative work", 4: "Aloneness as the medium of creativity", 5: "The energy to attract society", 6: "Objectivity"}},
   2: { name: "The Receptive", alt: "The Gate of Direction of the Self", lines: {1: "Intuition", 2: "Genius", 3: "Patience", 4: "Secretiveness", 5: "Intelligent application", 6: "Fixation"}},
@@ -305,31 +306,31 @@ const gateLookup = {
   37: { name: "The Family", alt: "The Gate of Friendship", lines: {1: "Mother/Father", 2: "Responsibility", 3: "Evenhandedness", 4: "Leadership by example", 5: "Love", 6: "Purpose"}},
   38: { name: "Opposition", alt: "The Gate of the Fighter", lines: {1: "Qualification", 2: "Politeness", 3: "Alliance", 4: "Investigation", 5: "Alienation", 6: "Misunderstanding"}},
   39: { name: "Obstruction", alt: "The Gate of Provocateur", lines: {1: "Disengagement", 2: "Confrontation", 3: "Responsibility", 4: "Temperance", 5: "Single-mindedness", 6: "The troubleshooter"}},
-  40: { name: "Deliverance", alt: "The Gate of Aloneness", lines: {1: "Recuperation", 2: "Resoluteness", 3: "Spirit", 4: "Dignity", 5: "Timing", 6: "Disassociation"}},
-  41: { name: "Decrease", alt: "The Gate of Contraction", lines: {1: "Disillusionment", 2: "Contraction", 3: "The provocateur", 4: "The hermit", 5: "The saint", 6: "The sage"}},
+  40: { name: "Deliverance", alt: "The Gate of Aloneness", lines: {1: "Recuperation", 2: "Resoluteness", 3: "Humility", 4: "Organization", 5: "Rigidity", 6: "Decapitation"}},
+  41: { name: "Decrease", alt: "The Gate of Contraction", lines: {1: "Reasonableness", 2: "Caution", 3: "Efficiency", 4: "Correction", 5: "Authorization", 6: "Contagion"}},
   42: { name: "Increase", alt: "The Gate of Growth", lines: {1: "Diversification", 2: "Identification", 3: "Trial and error", 4: "The middle man", 5: "Self-actualization", 6: "Nurturing"}},
   43: { name: "Breakthrough", alt: "The Gate of Insight", lines: {1: "Patience", 2: "Dedication", 3: "Expediency", 4: "The one-track mind", 5: "Progression", 6: "Breakthrough"}},
   44: { name: "Coming to Meet", alt: "The Gate of Alertness", lines: {1: "Conditions", 2: "Management", 3: "Interference", 4: "Honesty", 5: "Manipulation", 6: "Aloofness"}},
   45: { name: "Gathering Together", alt: "The Gate of the Gatherer", lines: {1: "Canvassing", 2: "Consensus", 3: "Exclusion", 4: "Direction", 5: "Leadership", 6: "Reconsideration"}},
-  46: { name: "Pushing Upward", alt: "The Gate of Determination", lines: {1: "The immigrant", 2: "Determination", 3: "Adaptability", 4: "Corruption", 5: "Consistency", 6: "Leadership"}},
-  47: { name: "Oppression", alt: "The Gate of Realization", lines: {1: "Oppression", 2: "The burdened", 3: "The oppressed", 4: "The prophet", 5: "The martyr", 6: "The saint"}},
-  48: { name: "The Well", alt: "The Gate of the Depths", lines: {1: "The immigrant", 2: "Determination", 3: "Adaptability", 4: "Corruption", 5: "Consistency", 6: "Leadership"}},
-  49: { name: "Revolution", alt: "The Gate of Revolution", lines: {1: "The revolutionary", 2: "The reformer", 3: "The agitator", 4: "The leader", 5: "The saint", 6: "The sage"}},
+  46: { name: "Pushing Upward", alt: "Determination of the Self", lines: {1: "Being discovered", 2: "The prima donna", 3: "Projection", 4: "Impact", 5: "Pacing", 6: "Integrity"}},
+  47: { name: "Oppression", alt: "The Gate of Realization", lines: {1: "Taking stock", 2: "Ambition", 3: "Self-oppression", 4: "Repression", 5: "The saint", 6: "Futility"}},
+  48: { name: "The Well", alt: "The Gate of Depth", lines: {1: "Insignificance", 2: "Degeneracy", 3: "Incommunicado", 4: "Restructuring", 5: "Action", 6: "Self-fulfillment"}},
+  49: { name: "Revolution", alt: "The Gate of Principles", lines: {1: "The law of necessity", 2: "The last resort", 3: "Popular discontent", 4: "Platform", 5: "Organization", 6: "Attraction"}},
   50: { name: "The Cauldron", alt: "The Gate of Values", lines: {1: "The immigrant", 2: "Determination", 3: "Adaptability", 4: "Corruption", 5: "Consistency", 6: "Leadership"}},
   51: { name: "The Arousing", alt: "The Gate of Shock", lines: {1: "Reference", 2: "Withdrawal", 3: "Adaptation", 4: "Limitation", 5: "Symmetry", 6: "Separation"}},
   52: { name: "Keeping Still", alt: "The Gate of Stillness", lines: {1: "Think before you speak", 2: "Concern", 3: "Controls", 4: "Self-discipline", 5: "Explanation", 6: "Peacefulness"}},
   53: { name: "Development", alt: "The Gate of Beginnings", lines: {1: "Accumulation", 2: "Momentum", 3: "Practicality", 4: "Assuredness", 5: "Assertion", 6: "Phasing"}},
-  54: { name: "The Marrying Maiden", alt: "The Gate of Ambition", lines: {1: "The immigrant", 2: "Determination", 3: "Adaptability", 4: "Corruption", 5: "Consistency", 6: "Leadership"}},
-  55: { name: "Abundance", alt: "The Gate of Abundance", lines: {1: "Sensibility", 2: "Misery loves company", 3: "The straw that breaks the camel's back", 4: "Dedication", 5: "Faith", 6: "Gratitude"}},
+  54: { name: "The Marrying Maiden", alt: "The Gate of Ambition", lines: {1: "Influence", 2: "Discretion", 3: "Covert interaction", 4: "Enlightenment/Endarkenment", 5: "Magnanimity", 6: "Selectivity"}},
+  55: { name: "Abundance", alt: "The Gate of Spirit", lines: {1: "Co-operation", 2: "Distrust", 3: "Innocence", 4: "Assimilation", 5: "Growth", 6: "Selfishness"}},
   56: { name: "The Wanderer", alt: "The Gate of Stimulation", lines: {1: "Quality", 2: "Linkage", 3: "Alienation", 4: "Expediency", 5: "Attracting attention", 6: "Caution"}},
-  57: { name: "The Gentle", alt: "The Gate of the Gentle", lines: {1: "The immigrant", 2: "Determination", 3: "Adaptability", 4: "Corruption", 5: "Consistency", 6: "Leadership"}},
-  58: { name: "The Joyous", alt: "The Gate of Joy", lines: {1: "Love of life", 2: "Perversion", 3: "Electricity", 4: "Focusing", 5: "Defense", 6: "Carried away"}},
-  59: { name: "Dispersion", alt: "The Gate of Dispersion", lines: {1: "The draftee", 2: "Assessment", 3: "Evaluation", 4: "Directness", 5: "Overreach", 6: "Confusion"}},
-  60: { name: "Limitation", alt: "The Gate of Limitation", lines: {1: "Acceptance", 2: "Decisiveness", 3: "Conservatism", 4: "Resourcefulness", 5: "Magnanimity", 6: "Rigidity"}},
-  61: { name: "Inner Truth", alt: "The Gate of Inner Truth", lines: {1: "Occult knowledge", 2: "Natural brilliance", 3: "Interdependence", 4: "Research", 5: "Influence", 6: "Appeal"}},
+  57: { name: "The Gentle", alt: "The Gate of Intuitive Insight", lines: {1: "Confusion", 2: "Cleansing", 3: "Acuteness", 4: "The director", 5: "Progression", 6: "Utilization"}},
+  58: { name: "The Joyous", alt: "The Gate of Aliveness", lines: {1: "Love of life", 2: "Perversion", 3: "Electricity", 4: "Focusing", 5: "Defense", 6: "Carried away"}},
+  59: { name: "Dispersion", alt: "The Gate of Sexuality", lines: {1: "The pre-emptive strike", 2: "Shyness", 3: "Openness", 4: "Brotherhood/Sisterhood", 5: "The femme fatale/Casanova", 6: "The one night stand"}},
+  60: { name: "Limitation", alt: "The Gate of Acceptance", lines: {1: "Acceptance", 2: "Decisiveness", 3: "Conservatism", 4: "Resourcefulness", 5: "Leadership", 6: "Rigidity"}},
+  61: { name: "Inner Truth", alt: "The Gate of Mystery", lines: {1: "Occult knowledge", 2: "Natural brilliance", 3: "Interdependence", 4: "Research", 5: "Influence", 6: "Appeal"}},
   62: { name: "Preponderance of the Small", alt: "The Gate of Detail", lines: {1: "Routine", 2: "Restraint", 3: "Discovery", 4: "Asceticism", 5: "Metamorphosis", 6: "Self-discipline"}},
-  63: { name: "After Completion", alt: "The Gate of Doubt", lines: {1: "The sin of omission", 2: "Recognition", 3: "The addict", 4: "The hermit", 5: "Confession", 6: "The gift horse"}},
-  64: { name: "Before Completion", alt: "The Gate of Confusion", lines: {1: "Acceptance", 2: "Decisiveness", 3: "Conservatism", 4: "Resourcefulness", 5: "Magnanimity", 6: "Rigidity"}}
+  63: { name: "After Completion", alt: "The Gate of Doubt", lines: {1: "Composure", 2: "Structuring", 3: "Continuance", 4: "Memory", 5: "Affirmation", 6: "Nostalgia"}},
+  64: { name: "Before Completion", alt: "The Gate of Confusion", lines: {1: "Conditions", 2: "Qualification", 3: "Overextension", 4: "Conviction", 5: "Promise", 6: "Victory"}}
 };
 
     let currentData = null;
