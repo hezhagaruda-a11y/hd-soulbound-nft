@@ -129,7 +129,7 @@
       background: linear-gradient(90deg, #10b981, #34d399);
     }
 
-    /* Floating Action Button – Current Global Transits (v2.1) */
+    /* Floating Action Button */
     .fab {
       position: fixed;
       bottom: 30px;
@@ -205,8 +205,7 @@
       </div>
     </div>
 
-    <!-- LIBRARY, GROUP COMPATIBILITY, APPROVED CANDIDATES tabs remain exactly as in v1.11 -->
-
+    <!-- LIBRARY TAB -->
     <div id="library-tab" class="hidden">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -217,6 +216,7 @@
       </div>
     </div>
 
+    <!-- GROUP COMPATIBILITY TAB -->
     <div id="compatibility-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Group &amp; Penta Intelligence</h2>
@@ -224,6 +224,7 @@
       </div>
     </div>
 
+    <!-- APPROVED CANDIDATES TAB -->
     <div id="approved-candidates-tab" class="hidden">
       <div class="card">
         <h2 style="margin-bottom:20px;">Approved Candidates</h2>
@@ -232,7 +233,7 @@
     </div>
   </div>
 
-  <!-- FLOATING ACTION BUTTON – Current Global Transits (v2.1) -->
+  <!-- FLOATING ACTION BUTTON – Current Global Transits -->
   <button class="fab" onclick="fetchCurrentTransits()" title="Current Global Transits">🌍</button>
 
   <script>
@@ -254,10 +255,10 @@
       - v1.9 : Group Compatibility ranked highest-to-lowest + green View button
       - v1.10: Added 50/50 "View" + "Approve" buttons in Group Compatibility
       - v1.11: OFF status now resets approved flag + consistent detailed info
-      - v2.1 : Added Current Global Transits floating action button in Generate tab
+      - v2.1 : Added Current Global Transits floating action button in Generate tab with clean planetary-style display
 
-      We have also reviewed the **HD Weeks Expanded** tab in the Master Library Google Sheet. 
-      This rich weekly transit data is now noted and ready for future synthesis when we expand the transit layer.
+      The transit layer brings real-time energetic context to the entire engine.
+      This is the beginning of a living, breathing intelligence system.
 
       The code remains clean, self-contained, and richly documented so anyone can understand its purpose and evolution.
     */
@@ -302,7 +303,10 @@
 
       try {
         const dateStr = document.getElementById('birthDate').value;
-        if (!dateStr) throw new Error("Please select a date");
+        if (!dateStr) {
+          alert("Please select a birth date to generate your blueprint.");
+          throw new Error("Date required");
+        }
 
         const [year, month, day] = dateStr.split('-').map(Number);
         const [hour, minute] = document.getElementById('birthTime').value.split(':').map(Number);
@@ -329,7 +333,6 @@
         document.getElementById('result').classList.remove('hidden');
       } catch (e) {
         console.error(e);
-        alert("Generation failed. Check console (F12) for details.");
       } finally {
         btn.textContent = 'Generate Human Design Blueprint';
         btn.disabled = false;
@@ -598,7 +601,7 @@
       container.innerHTML = html;
     };
 
-    // Current Global Transits – v2.1 (using existing /calculate with current UTC time)
+    // Current Global Transits – beautifully formatted like planetary sections
     window.fetchCurrentTransits = async () => {
       const fab = document.querySelector('.fab');
       const originalText = fab.innerHTML;
@@ -620,11 +623,18 @@
         
         const transitData = await res.json();
 
+        // Format like planetary sections
         let html = `
           <div style="background:#111;padding:20px;border-radius:16px;margin-top:20px;">
             <h3 style="margin-bottom:16px;color:var(--accent);">🌍 Current Global Transits</h3>
             <p><strong>UTC Time:</strong> ${now.toUTCString()}</p>
-            <pre style="background:#0a0a0a;padding:16px;border-radius:12px;font-size:0.95rem;white-space:pre-wrap;overflow:auto;max-height:400px;">${JSON.stringify(transitData, null, 2)}</pre>
+            
+            <div class="planetary">
+              <div>
+                <div class="side-header personality-side">Current Planetary Positions</div>
+                <div id="transitPlanets"></div>
+              </div>
+            </div>
           </div>`;
 
         const resultEl = document.getElementById('result');
@@ -634,6 +644,14 @@
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = html;
           document.getElementById('generate-tab').appendChild(tempDiv.firstElementChild);
+        }
+
+        // Render planetary rows for current transits
+        const transitContainer = document.getElementById('transitPlanets');
+        if (transitContainer) {
+          transitContainer.innerHTML = '';
+          const planets = transitData.gates?.prs?.Planets || [];
+          planets.forEach(p => transitContainer.appendChild(createPlanetRow(p, 'personality-side')));
         }
 
       } catch (e) {
@@ -649,7 +667,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.1 – Current Global Transits floating button added', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.1 – Current Global Transits floating button added with clean planetary display', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
