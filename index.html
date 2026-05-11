@@ -184,9 +184,11 @@
       - v2.1 : Current Global Transits + full 64-gate lookup
       - v2.2 : Groupenta Dashboard with corrected pillars
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
-      - v2.4 : Red X for missing gates in matrix + new Line Names table below it
+      - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6
 
-      All functions are fully included without any abbreviation.
+      Line Names Matrix is now split exactly as requested:
+      - First table: 15, 5, 46, 29, 14, 2
+      - Second table: 1, 8, 7, 31, 13, 33
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -761,31 +763,47 @@
       });
       html += `</tbody></table></div>
 
-        <!-- Matrix 2: Line Names -->
+        <!-- Matrix 2: Line Names - Split into two groups of 6 -->
         <div class="groupenta-matrix">
-          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Line Names Matrix #${selectedGroupentaId}</h3>
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Line Names Matrix #${selectedGroupentaId} (Group 1)</h3>
           <table>
             <thead>
               <tr>
                 <th>Member</th>
-                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th><th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th>
               </tr>
             </thead>
             <tbody>`;
       activeDesigns.forEach(d => {
         const memberLines = {};
-        if (d.data.gates?.prs?.Planets) {
-          d.data.gates.prs.Planets.forEach(p => {
-            if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line;
-          });
-        }
-        if (d.data.gates?.des?.Planets) {
-          d.data.gates.des.Planets.forEach(p => {
-            if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line;
-          });
-        }
+        if (d.data.gates?.prs?.Planets) d.data.gates.prs.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
+        if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
         html += `<tr><td>${d.name}</td>`;
-        [15,5,46,29,14,2,1,8,7,31,13,33].forEach(g => {
+        [15,5,46,29,14,2].forEach(g => {
+          const lineNum = memberLines[g];
+          const lineName = lineNum ? LINE_NAMES[lineNum] : '—';
+          html += `<td>${lineName}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>
+
+        <div class="groupenta-matrix">
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Line Names Matrix #${selectedGroupentaId} (Group 2)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      activeDesigns.forEach(d => {
+        const memberLines = {};
+        if (d.data.gates?.prs?.Planets) d.data.gates.prs.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
+        if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
+        html += `<tr><td>${d.name}</td>`;
+        [1,8,7,31,13,33].forEach(g => {
           const lineNum = memberLines[g];
           const lineName = lineNum ? LINE_NAMES[lineNum] : '—';
           html += `<td>${lineName}</td>`;
@@ -801,7 +819,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Red X + Line Names Matrix added', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Line Names Matrix split into two groups of 6', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
