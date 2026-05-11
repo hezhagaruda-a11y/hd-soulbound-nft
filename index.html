@@ -80,12 +80,13 @@
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
-    /* Matrix Table */
-    .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; }
+    /* Matrix Tables */
+    .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; margin-bottom: 40px; }
     .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
     .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
     .groupenta-matrix td:first-child { text-align: left; font-weight: 600; color: #ddd; }
     .checkmark { color: #10b981; font-size: 1.4rem; }
+    .redx { color: #ef4444; font-size: 1.4rem; }
 
     .fab { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #000; border: none; width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 10px 20px rgba(16,185,129,0.4); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; transition: all 0.3s; }
     .fab:hover { transform: scale(1.1); }
@@ -174,10 +175,18 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.3 (COMPLETE)
-      ===============================================
-      Full Groupenta system with multiple Groupentas and selector dropdown.
-      All functionalities are included without abbreviation.
+      STORY OF THIS CODE – FOUNDATION v2.4
+      =====================================
+      We have now reached a mature and beautiful foundation.
+
+      Journey so far:
+      - v1.0 → v1.11 : Full Group Intelligence platform
+      - v2.1 : Current Global Transits + full 64-gate lookup
+      - v2.2 : Groupenta Dashboard with corrected pillars
+      - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
+      - v2.4 : Red X for missing gates in matrix + new Line Names table below it
+
+      All functions are fully included without any abbreviation.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -260,6 +269,15 @@
       { name: "7-31", gates: [7, 31], label: "Pattern Fixing" },
       { name: "13-33", gates: [13, 33], label: "Memory Retention" }
     ];
+
+    const LINE_NAMES = {
+      1: "Detail",
+      2: "Potential",
+      3: "Determination",
+      4: "Networking",
+      5: "Marketing",
+      6: "Leadership"
+    };
 
     let currentData = null;
     let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
@@ -663,7 +681,6 @@
         return;
       }
 
-      // Set default selected ID if not set
       if (selectedGroupentaId === null || !groupentaIds.includes(selectedGroupentaId)) {
         selectedGroupentaId = groupentaIds[0];
       }
@@ -721,7 +738,7 @@
           </div>
         </div>
 
-        <!-- Members Matrix -->
+        <!-- Matrix 1: Check / Red X -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedGroupentaId}</h3>
           <table>
@@ -738,7 +755,40 @@
         if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => memberGates.add(p.Gate));
         html += `<tr><td>${d.name}</td>`;
         [15,5,46,29,14,2,1,8,7,31,13,33].forEach(g => {
-          html += `<td>${memberGates.has(g) ? '<span class="checkmark">✔</span>' : ''}</td>`;
+          html += `<td>${memberGates.has(g) ? '<span class="checkmark">✔</span>' : '<span class="redx">✕</span>'}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>
+
+        <!-- Matrix 2: Line Names -->
+        <div class="groupenta-matrix">
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Line Names Matrix #${selectedGroupentaId}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th><th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      activeDesigns.forEach(d => {
+        const memberLines = {};
+        if (d.data.gates?.prs?.Planets) {
+          d.data.gates.prs.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line;
+          });
+        }
+        if (d.data.gates?.des?.Planets) {
+          d.data.gates.des.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line;
+          });
+        }
+        html += `<tr><td>${d.name}</td>`;
+        [15,5,46,29,14,2,1,8,7,31,13,33].forEach(g => {
+          const lineNum = memberLines[g];
+          const lineName = lineNum ? LINE_NAMES[lineNum] : '—';
+          html += `<td>${lineName}</td>`;
         });
         html += `</tr>`;
       });
@@ -751,7 +801,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Selector Dropdown added', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Red X + Line Names Matrix added', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
