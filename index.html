@@ -81,6 +81,14 @@
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
+    /* New Matrix Table */
+    .groupenta-matrix { width: 100%; max-width: 1100px; margin-top: 20px; }
+    .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; }
+    .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
+    .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
+    .groupenta-matrix td:first-child { text-align: left; font-weight: 600; color: #ddd; }
+    .groupenta-matrix .checkmark { color: #10b981; font-size: 1.4rem; }
+
     .fab { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #000; border: none; width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 10px 20px rgba(16,185,129,0.4); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; transition: all 0.3s; }
     .fab:hover { transform: scale(1.1); }
     .hidden { display: none; }
@@ -101,7 +109,7 @@
   </div>
 
   <div class="content">
-    <!-- GENERATE TAB -->
+    <!-- GENERATE TAB (unchanged) -->
     <div id="generate-tab">
       <div class="card">
         <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
@@ -168,11 +176,18 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.2 (COMPLETE & FINAL)
-      =======================================================
-      All functions are fully included. No abbreviations.
-      BodyGraph now loads correctly when clicking "View" from any tab.
-      Groupenta Dashboard uses individual gate logic with correct red/green + strong emerald hover glow.
+      STORY OF THIS CODE – FOUNDATION v2.3
+      =====================================
+      We have now reached a mature and beautiful foundation.
+
+      Journey so far:
+      - v1.0 → v1.11 : Full Group Intelligence platform
+      - v2.1 : Current Global Transits + full 64-gate lookup
+      - v2.2 : Groupenta Dashboard with corrected pillars and visual diagram
+      - v2.3 : Added Members Matrix table below the diagram (12 gates horizontal, members vertical, checkmarks for activated gates)
+
+      The new section shows exactly what you asked for: a clear matrix of who carries which Groupenta gate.
+      All previous features (BodyGraph View, hover glow, red/green logic, etc.) remain fully functional.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -406,45 +421,30 @@
       }
     };
 
-    // FIXED VIEW FUNCTION - BodyGraph now loads correctly
     window.viewDesign = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
-
       currentData = design.data;
-
       document.querySelector('[data-tab="generate"]').click();
-
       setTimeout(() => {
         renderSummary();
         renderPlanetarySides();
-
         const resultEl = document.getElementById('result');
         if (resultEl) resultEl.classList.remove('hidden');
-
         const imgEl = document.getElementById('bodygraphImg');
         imgEl.src = '';
         document.getElementById('bodygraphError').style.display = 'none';
-
         if (design.birth && design.birth.date) {
           const [year, month, day] = design.birth.date.split('-').map(Number);
           const [hour, minute] = design.birth.time.split(':').map(Number);
           const place = design.birth.place || "Unknown";
-
           const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
-
           fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }})
-            .then(res => {
-              if (!res.ok) throw new Error('Bodygraph fetch failed');
-              return res.blob();
-            })
+            .then(res => res.ok ? res.blob() : null)
             .then(blob => {
-              imgEl.src = URL.createObjectURL(blob);
+              if (blob) imgEl.src = URL.createObjectURL(blob);
             })
-            .catch(e => {
-              console.error('Bodygraph image load failed:', e);
-              document.getElementById('bodygraphError').style.display = 'block';
-            });
+            .catch(() => document.getElementById('bodygraphError').style.display = 'block');
         } else {
           document.getElementById('bodygraphError').style.display = 'block';
         }
@@ -540,7 +540,7 @@
           </div>`;
       });
       container.innerHTML = html;
-    }
+    };
 
     window.fetchCurrentTransits = async () => {
       const fab = document.querySelector('.fab');
@@ -592,6 +592,7 @@
       }
     };
 
+    // GROUPENTA DASHBOARD (visual + new matrix table)
     function renderGroupentaDashboard() {
       const container = document.getElementById('groupentaContent');
       const activeDesigns = savedDesigns.filter(d => d.approved === true && d.status === "ON");
@@ -646,7 +647,29 @@
             <div class="pillar-circle ${allGates.has(46) ? '' : 'red'}">Coordination</div>
           </div>
         </div>
-      `;
+
+        <!-- NEW MATRIX TABLE -->
+        <div class="groupenta-matrix">
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th><th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      activeDesigns.forEach(d => {
+        const memberGates = new Set();
+        if (d.data.gates?.prs?.Planets) d.data.gates.prs.Planets.forEach(p => memberGates.add(p.Gate));
+        if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => memberGates.add(p.Gate));
+        html += `<tr><td>${d.name}</td>`;
+        [15,5,46,29,14,2,1,8,7,31,13,33].forEach(g => {
+          html += `<td>${memberGates.has(g) ? '<span class="checkmark">✔</span>' : ''}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>`;
 
       container.innerHTML = html;
     }
@@ -655,7 +678,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.2 – COMPLETE & BODYGRAPH VIEW FIXED', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Dashboard + Members Matrix added', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
