@@ -186,9 +186,10 @@
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
       - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6
 
-      Line Names Matrix is now split exactly as requested:
-      - First table: 15, 5, 46, 29, 14, 2
-      - Second table: 1, 8, 7, 31, 13, 33
+      Latest refinement (this version):
+      - Line Names Matrix now correctly shows **all unique lines** for the same gate (Personality + Design sides)
+      - If a member has the same gate on both sides with different lines, both line names are displayed (comma-separated)
+      - Everything else remains fully intact
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -763,7 +764,7 @@
       });
       html += `</tbody></table></div>
 
-        <!-- Matrix 2: Line Names - Split into two groups of 6 -->
+        <!-- Matrix 2: Line Names - Group 1 -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Line Names Matrix #${selectedGroupentaId} (Group 1)</h3>
           <table>
@@ -775,19 +776,34 @@
             </thead>
             <tbody>`;
       activeDesigns.forEach(d => {
-        const memberLines = {};
-        if (d.data.gates?.prs?.Planets) d.data.gates.prs.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
-        if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
+        const memberLines = {}; // gate → Set of line numbers
+        if (d.data.gates?.prs?.Planets) {
+          d.data.gates.prs.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = new Set();
+            memberLines[p.Gate].add(p.Line);
+          });
+        }
+        if (d.data.gates?.des?.Planets) {
+          d.data.gates.des.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = new Set();
+            memberLines[p.Gate].add(p.Line);
+          });
+        }
         html += `<tr><td>${d.name}</td>`;
         [15,5,46,29,14,2].forEach(g => {
-          const lineNum = memberLines[g];
-          const lineName = lineNum ? LINE_NAMES[lineNum] : '—';
-          html += `<td>${lineName}</td>`;
+          const lines = memberLines[g];
+          if (lines && lines.size > 0) {
+            const names = Array.from(lines).map(l => LINE_NAMES[l] || l).join(', ');
+            html += `<td>${names}</td>`;
+          } else {
+            html += `<td>—</td>`;
+          }
         });
         html += `</tr>`;
       });
       html += `</tbody></table></div>
 
+        <!-- Matrix 3: Line Names - Group 2 -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Line Names Matrix #${selectedGroupentaId} (Group 2)</h3>
           <table>
@@ -799,14 +815,28 @@
             </thead>
             <tbody>`;
       activeDesigns.forEach(d => {
-        const memberLines = {};
-        if (d.data.gates?.prs?.Planets) d.data.gates.prs.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
-        if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => { if (!memberLines[p.Gate]) memberLines[p.Gate] = p.Line; });
+        const memberLines = {}; // gate → Set of line numbers
+        if (d.data.gates?.prs?.Planets) {
+          d.data.gates.prs.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = new Set();
+            memberLines[p.Gate].add(p.Line);
+          });
+        }
+        if (d.data.gates?.des?.Planets) {
+          d.data.gates.des.Planets.forEach(p => {
+            if (!memberLines[p.Gate]) memberLines[p.Gate] = new Set();
+            memberLines[p.Gate].add(p.Line);
+          });
+        }
         html += `<tr><td>${d.name}</td>`;
         [1,8,7,31,13,33].forEach(g => {
-          const lineNum = memberLines[g];
-          const lineName = lineNum ? LINE_NAMES[lineNum] : '—';
-          html += `<td>${lineName}</td>`;
+          const lines = memberLines[g];
+          if (lines && lines.size > 0) {
+            const names = Array.from(lines).map(l => LINE_NAMES[l] || l).join(', ');
+            html += `<td>${names}</td>`;
+          } else {
+            html += `<td>—</td>`;
+          }
         });
         html += `</tr>`;
       });
@@ -819,7 +849,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Line Names Matrix split into two groups of 6', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Multiple lines per gate now shown in Line Names Matrix', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
