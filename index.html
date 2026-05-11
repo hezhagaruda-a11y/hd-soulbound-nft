@@ -168,10 +168,11 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.2 (COMPLETE & FIXED)
-      ====================================================
-      All functions and constants are now included.
-      Groupenta Dashboard uses individual gate logic + strong emerald hover glow.
+      STORY OF THIS CODE – FOUNDATION v2.2 (COMPLETE & FINAL)
+      =======================================================
+      All functions are fully included. No abbreviations.
+      BodyGraph now loads correctly when clicking "View" from any tab.
+      Groupenta Dashboard uses individual gate logic with correct red/green + strong emerald hover glow.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -405,14 +406,49 @@
       }
     };
 
+    // FIXED VIEW FUNCTION - BodyGraph now loads correctly
     window.viewDesign = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
+
       currentData = design.data;
+
       document.querySelector('[data-tab="generate"]').click();
-      renderSummary();
-      renderPlanetarySides();
-      document.getElementById('result').classList.remove('hidden');
+
+      setTimeout(() => {
+        renderSummary();
+        renderPlanetarySides();
+
+        const resultEl = document.getElementById('result');
+        if (resultEl) resultEl.classList.remove('hidden');
+
+        const imgEl = document.getElementById('bodygraphImg');
+        imgEl.src = '';
+        document.getElementById('bodygraphError').style.display = 'none';
+
+        if (design.birth && design.birth.date) {
+          const [year, month, day] = design.birth.date.split('-').map(Number);
+          const [hour, minute] = design.birth.time.split(':').map(Number);
+          const place = design.birth.place || "Unknown";
+
+          const imgUrl = `${BACKEND_URL}/bodygraph?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=${encodeURIComponent(place)}`;
+
+          fetch(imgUrl, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }})
+            .then(res => {
+              if (!res.ok) throw new Error('Bodygraph fetch failed');
+              return res.blob();
+            })
+            .then(blob => {
+              imgEl.src = URL.createObjectURL(blob);
+            })
+            .catch(e => {
+              console.error('Bodygraph image load failed:', e);
+              document.getElementById('bodygraphError').style.display = 'block';
+            });
+        } else {
+          document.getElementById('bodygraphError').style.display = 'block';
+        }
+      }, 150);
     };
 
     window.clearLibrary = function() {
@@ -619,7 +655,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.2 – FULLY RESTORED', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.2 – COMPLETE & BODYGRAPH VIEW FIXED', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
