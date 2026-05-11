@@ -175,8 +175,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.4 (FINAL)
-      =============================================
+      STORY OF THIS CODE – FOUNDATION v2.5
+      =====================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -184,9 +184,11 @@
       - v2.1 : Current Global Transits + full 64-gate lookup
       - v2.2 : Groupenta Dashboard with corrected pillars
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
-      - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6 + members sorted by age (oldest first)
+      - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6 + age sorting
+      - v2.5 : New Motivations Matrix (based on Color) split into two groups of 6
 
-      Final refinement applied: All Groupenta tables (Members Matrix + both Line Names Matrices) are now sorted by age, oldest first.
+      All Groupenta tables are sorted by age (oldest first).
+      Multiple lines / colors per gate are shown comma-separated.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -277,6 +279,15 @@
       4: "Networking",
       5: "Marketing",
       6: "Leadership"
+    };
+
+    const MOTIVATION_NAMES = {
+      1: "Fear",
+      2: "Hope",
+      3: "Desire",
+      4: "Wanting",
+      5: "Guilt",
+      6: "Acceptance"
     };
 
     let currentData = null;
@@ -690,7 +701,7 @@
       activeDesigns.sort((a, b) => {
         const ageA = parseFloat(a.data.general?.age) || 0;
         const ageB = parseFloat(b.data.general?.age) || 0;
-        return ageB - ageA; // oldest first
+        return ageB - ageA;
       });
 
       let allGates = new Set();
@@ -843,6 +854,94 @@
         });
         html += `</tr>`;
       });
+      html += `</tbody></table></div>
+
+        <!-- Matrix 4: Motivations - Group 1 -->
+        <div class="groupenta-matrix">
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Motivations Matrix #${selectedGroupentaId} (Group 1)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      activeDesigns.forEach(d => {
+        const memberMotivations = {}; // gate → Set of motivation names
+        if (d.data.gates?.prs?.Planets) {
+          d.data.gates.prs.Planets.forEach(p => {
+            if (!memberMotivations[p.Gate]) memberMotivations[p.Gate] = new Set();
+            if (p.Color) {
+              const mot = MOTIVATION_NAMES[p.Color];
+              if (mot) memberMotivations[p.Gate].add(mot);
+            }
+          });
+        }
+        if (d.data.gates?.des?.Planets) {
+          d.data.gates.des.Planets.forEach(p => {
+            if (!memberMotivations[p.Gate]) memberMotivations[p.Gate] = new Set();
+            if (p.Color) {
+              const mot = MOTIVATION_NAMES[p.Color];
+              if (mot) memberMotivations[p.Gate].add(mot);
+            }
+          });
+        }
+        html += `<tr><td>${d.name}</td>`;
+        [15,5,46,29,14,2].forEach(g => {
+          const motivations = memberMotivations[g];
+          if (motivations && motivations.size > 0) {
+            html += `<td>${Array.from(motivations).join(', ')}</td>`;
+          } else {
+            html += `<td>—</td>`;
+          }
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>
+
+        <!-- Matrix 5: Motivations - Group 2 -->
+        <div class="groupenta-matrix">
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Motivations Matrix #${selectedGroupentaId} (Group 2)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      activeDesigns.forEach(d => {
+        const memberMotivations = {}; // gate → Set of motivation names
+        if (d.data.gates?.prs?.Planets) {
+          d.data.gates.prs.Planets.forEach(p => {
+            if (!memberMotivations[p.Gate]) memberMotivations[p.Gate] = new Set();
+            if (p.Color) {
+              const mot = MOTIVATION_NAMES[p.Color];
+              if (mot) memberMotivations[p.Gate].add(mot);
+            }
+          });
+        }
+        if (d.data.gates?.des?.Planets) {
+          d.data.gates.des.Planets.forEach(p => {
+            if (!memberMotivations[p.Gate]) memberMotivations[p.Gate] = new Set();
+            if (p.Color) {
+              const mot = MOTIVATION_NAMES[p.Color];
+              if (mot) memberMotivations[p.Gate].add(mot);
+            }
+          });
+        }
+        html += `<tr><td>${d.name}</td>`;
+        [1,8,7,31,13,33].forEach(g => {
+          const motivations = memberMotivations[g];
+          if (motivations && motivations.size > 0) {
+            html += `<td>${Array.from(motivations).join(', ')}</td>`;
+          } else {
+            html += `<td>—</td>`;
+          }
+        });
+        html += `</tr>`;
+      });
       html += `</tbody></table></div>`;
 
       container.innerHTML = html;
@@ -852,7 +951,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – FINAL with age sorting (oldest first)', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.5 – Motivations Matrix added (based on Color)', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
