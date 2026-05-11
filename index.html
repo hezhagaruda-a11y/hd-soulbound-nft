@@ -80,6 +80,7 @@
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
+    /* Matrix Table */
     .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; }
     .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
     .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
@@ -173,17 +174,10 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.3
-      =====================================
-      We have now reached a mature and beautiful foundation.
-
-      Journey so far:
-      - v1.0 → v1.11 : Full Group Intelligence platform
-      - v2.1 : Current Global Transits + full 64-gate lookup
-      - v2.2 : Groupenta Dashboard with corrected pillars
-      - v2.3 : Members Matrix + Groupenta Status management with multiple Groupentas (New / Existing / Unassigned)
-
-      You can now create and manage multiple separate Groupenta fields.
+      STORY OF THIS CODE – FOUNDATION v2.3 (COMPLETE)
+      ===============================================
+      Full Groupenta system with multiple Groupentas and selector dropdown.
+      All functionalities are included without abbreviation.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -269,6 +263,7 @@
 
     let currentData = null;
     let savedDesigns = JSON.parse(localStorage.getItem("hdGroupDesigns") || "[]");
+    let selectedGroupentaId = null;
 
     // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
@@ -540,7 +535,6 @@
       container.innerHTML = html;
     }
 
-    // New modal for Groupenta Status
     window.showGroupentaStatusModal = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
@@ -609,22 +603,72 @@
       renderGroupentaDashboard();
     };
 
-    window.fetchCurrentTransits = async () => { /* full function as in previous complete version */ };
+    window.fetchCurrentTransits = async () => {
+      const fab = document.querySelector('.fab');
+      const originalText = fab.innerHTML;
+      fab.innerHTML = '⏳';
+      fab.style.pointerEvents = 'none';
+      try {
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth() + 1;
+        const day = now.getUTCDate();
+        const hour = now.getUTCHours();
+        const minute = now.getUTCMinutes();
+        const url = `${BACKEND_URL}/calculate?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=Global`;
+        const res = await fetch(url, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        const transitData = await res.json();
+        let html = `
+          <div style="background:#111;padding:20px;border-radius:16px;margin-top:20px;">
+            <h3 style="margin-bottom:16px;color:var(--accent);">🌍 Current Global Transits</h3>
+            <p><strong>UTC Time:</strong> ${now.toUTCString()}</p>
+            <div class="planetary">
+              <div>
+                <div class="side-header personality-side">Current Planetary Positions</div>
+                <div id="transitPlanets"></div>
+              </div>
+            </div>
+          </div>`;
+        const resultEl = document.getElementById('result');
+        if (resultEl && !resultEl.classList.contains('hidden')) {
+          resultEl.insertAdjacentHTML('beforeend', html);
+        } else {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          document.getElementById('generate-tab').appendChild(tempDiv.firstElementChild);
+        }
+        const transitContainer = document.getElementById('transitPlanets');
+        if (transitContainer) {
+          transitContainer.innerHTML = '';
+          const planets = transitData.gates?.prs?.Planets || [];
+          planets.forEach(p => transitContainer.appendChild(createPlanetRow(p, 'personality-side')));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Could not fetch current transits. Check console for details.");
+      } finally {
+        fab.innerHTML = originalText;
+        fab.style.pointerEvents = 'auto';
+      }
+    };
 
     function renderGroupentaDashboard() {
       const container = document.getElementById('groupentaContent');
 
-      // Get all unique Groupenta IDs
-      let groupentaIds = [...new Set(savedDesigns.filter(d => d.groupentaId).map(d => d.groupentaId))].sort((a,b) => a - b);
+      let groupentaIds = [...new Set(savedDesigns.filter(d => d.groupentaId !== null && d.groupentaId !== undefined).map(d => d.groupentaId))].sort((a,b) => a - b);
 
       if (groupentaIds.length === 0) {
         container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No Groupenta fields yet.<br>Go to Approved Candidates and assign members to new Groupentas.</p>`;
         return;
       }
 
-      // For now show the first Groupenta (you can extend with selector later)
-      const selectedId = groupentaIds[0]; // Simple default for now
-      const activeDesigns = savedDesigns.filter(d => d.groupentaId === selectedId);
+      // Set default selected ID if not set
+      if (selectedGroupentaId === null || !groupentaIds.includes(selectedGroupentaId)) {
+        selectedGroupentaId = groupentaIds[0];
+      }
+
+      const activeDesigns = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
 
       let allGates = new Set();
       activeDesigns.forEach(d => {
@@ -632,10 +676,15 @@
         if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => allGates.add(p.Gate));
       });
 
+      let dropdownOptions = groupentaIds.map(id => `<option value="${id}" ${id === selectedGroupentaId ? 'selected' : ''}>Groupenta #${id}</option>`).join('');
+
       let html = `
         <div style="text-align:center;">
           <div class="globe">🌍</div>
-          <h3 style="margin:20px 0 10px;color:var(--accent);">Groupenta Field #${selectedId}</h3>
+          <select onchange="selectedGroupentaId = parseInt(this.value); renderGroupentaDashboard();" style="margin:15px 0;padding:8px 16px;background:#222;color:#fff;border:none;border-radius:8px;font-size:1rem;">
+            ${dropdownOptions}
+          </select>
+          <h3 style="margin:10px 0 10px;color:var(--accent);">Groupenta Field #${selectedGroupentaId}</h3>
           <p style="color:#aaa;">${activeDesigns.length} active members</p>
         </div>
 
@@ -674,7 +723,7 @@
 
         <!-- Members Matrix -->
         <div class="groupenta-matrix">
-          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedId}</h3>
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedGroupentaId}</h3>
           <table>
             <thead>
               <tr>
@@ -702,7 +751,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Status with multiple Groupentas', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Selector Dropdown added', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
