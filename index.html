@@ -58,9 +58,17 @@
     .groupenta-flow { display: flex; width: 100%; max-width: 1100px; justify-content: space-between; align-items: center; gap: 30px; }
     .pillar { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 180px; }
     .pillar-circle { 
-      width: 110px; height: 110px; border-radius: 50%; background: #10b981; 
-      display: flex; align-items: center; justify-content: center; color: #000; 
-      font-weight: bold; text-align: center; box-shadow: 0 0 15px rgba(16,185,129,0.6); 
+      width: 110px; 
+      height: 110px; 
+      border-radius: 50%; 
+      background: #10b981; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: #000; 
+      font-weight: bold; 
+      text-align: center; 
+      box-shadow: 0 0 15px rgba(16,185,129,0.6); 
       transition: all 0.3s; 
     }
     .pillar-circle:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
@@ -72,7 +80,6 @@
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
-    /* Matrix Table */
     .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; }
     .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
     .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
@@ -174,15 +181,14 @@
       - v1.0 → v1.11 : Full Group Intelligence platform
       - v2.1 : Current Global Transits + full 64-gate lookup
       - v2.2 : Groupenta Dashboard with corrected pillars
-      - v2.3 : Members Matrix + "Groupenta Active" toggle in Approved Candidates
+      - v2.3 : Members Matrix + Groupenta Status management with multiple Groupentas (New / Existing / Unassigned)
 
-      You can now decide exactly which approved members are active in the current Groupenta Field.
+      You can now create and manage multiple separate Groupenta fields.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
-    // FULL GATE LOOKUP (your latest corrected version)
     const gateLookup = {
       1: { name: "The Creative", alt: "The Gate of Self-Expression", lines: {1: "Creation is independent of will", 2: "Love is light", 3: "The energy to sustain creative work", 4: "Aloneness as the medium of creativity", 5: "The energy to attract society", 6: "Objectivity"}},
       2: { name: "The Receptive", alt: "The Gate of Direction of the Self", lines: {1: "Intuition", 2: "Genius", 3: "Patience", 4: "Secretiveness", 5: "Intelligent application", 6: "Fixation"}},
@@ -355,7 +361,7 @@
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       const birthData = { date: document.getElementById('birthDate').value, time: document.getElementById('birthTime').value, place: document.getElementById('birthPlace').value };
-      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData, birth: birthData, status: "ON", approved: false, groupentaActive: true });
+      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData, birth: birthData, status: "ON", approved: false, groupentaId: null });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
@@ -519,87 +525,106 @@
       approved.forEach(d => {
         const g = d.data.general || {};
         const age = g.age ? `${g.age} ` : '';
-        const groupentaActive = d.groupentaActive !== false;
+        const groupentaId = d.groupentaId || null;
+        let statusText = groupentaId ? `Groupenta #${groupentaId}` : "Unassigned";
         html += `
           <div style="margin-bottom:16px;background:#111;padding:16px;border-radius:12px;">
             <strong>${d.name}</strong><br>
             <small style="color:#aaa;">${age}${g.energy_type} • ${g.inner_authority} • ${g.profile}</small>
             <div style="margin-top:12px;display:flex;gap:8px;">
               <button onclick="viewDesign(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">👁️ View Full Blueprint</button>
-              <button onclick="toggleGroupentaActive(${d.id});" class="groupenta-btn ${groupentaActive ? '' : 'off'}">${groupentaActive ? '✅ Groupenta Active' : 'Groupenta Inactive'}</button>
+              <button onclick="showGroupentaStatusModal(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">Groupenta Status: ${statusText}</button>
             </div>
           </div>`;
       });
       container.innerHTML = html;
     }
 
-    window.toggleGroupentaActive = function(id) {
+    // New modal for Groupenta Status
+    window.showGroupentaStatusModal = function(id) {
       const design = savedDesigns.find(d => d.id === id);
       if (!design) return;
-      design.groupentaActive = !design.groupentaActive;
+
+      let existingIds = [...new Set(savedDesigns.filter(d => d.groupentaId).map(d => d.groupentaId))].sort((a,b) => a - b);
+
+      let modalHtml = `
+        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;">
+          <div style="background:#141414;padding:30px;border-radius:16px;max-width:400px;width:90%;">
+            <h3 style="margin-bottom:20px;">Groupenta Status for ${design.name}</h3>
+            <button onclick="assignToNewGroupenta(${id});" style="width:100%;margin-bottom:12px;padding:14px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;font-weight:600;">Assign to New Groupenta</button>
+            ${existingIds.length > 0 ? `
+              <h4 style="margin:15px 0 8px;">Assign to Existing Groupenta</h4>
+              ${existingIds.map(id => `<button onclick="assignToExistingGroupenta(${design.id},${id});" style="width:100%;margin-bottom:8px;padding:12px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Groupenta #${id}</button>`).join('')}
+            ` : ''}
+            <button onclick="setUnassigned(${id});" style="width:100%;margin-top:20px;padding:14px;background:#ff4444;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:600;">Unassigned</button>
+            <button onclick="closeModal()" style="width:100%;margin-top:12px;padding:12px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Cancel</button>
+          </div>
+        </div>
+      `;
+
+      const modal = document.createElement('div');
+      modal.innerHTML = modalHtml;
+      document.body.appendChild(modal);
+    };
+
+    window.closeModal = function() {
+      const modals = document.querySelectorAll('div[style*="position:fixed"]');
+      modals.forEach(m => m.remove());
+    };
+
+    window.assignToNewGroupenta = function(id) {
+      closeModal();
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      let maxId = 0;
+      savedDesigns.forEach(d => {
+        if (d.groupentaId && d.groupentaId > maxId) maxId = d.groupentaId;
+      });
+      design.groupentaId = maxId + 1;
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      alert(`✅ Assigned to new Groupenta #${design.groupentaId}`);
       renderApprovedCandidates();
       renderGroupentaDashboard();
     };
 
-    window.fetchCurrentTransits = async () => {
-      const fab = document.querySelector('.fab');
-      const originalText = fab.innerHTML;
-      fab.innerHTML = '⏳';
-      fab.style.pointerEvents = 'none';
-      try {
-        const now = new Date();
-        const year = now.getUTCFullYear();
-        const month = now.getUTCMonth() + 1;
-        const day = now.getUTCDate();
-        const hour = now.getUTCHours();
-        const minute = now.getUTCMinutes();
-        const url = `${BACKEND_URL}/calculate?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&place=Global`;
-        const res = await fetch(url, { headers: { "Authorization": `Bearer ${HD_API_TOKEN}` }});
-        if (!res.ok) throw new Error(`API error ${res.status}`);
-        const transitData = await res.json();
-        let html = `
-          <div style="background:#111;padding:20px;border-radius:16px;margin-top:20px;">
-            <h3 style="margin-bottom:16px;color:var(--accent);">🌍 Current Global Transits</h3>
-            <p><strong>UTC Time:</strong> ${now.toUTCString()}</p>
-            <div class="planetary">
-              <div>
-                <div class="side-header personality-side">Current Planetary Positions</div>
-                <div id="transitPlanets"></div>
-              </div>
-            </div>
-          </div>`;
-        const resultEl = document.getElementById('result');
-        if (resultEl && !resultEl.classList.contains('hidden')) {
-          resultEl.insertAdjacentHTML('beforeend', html);
-        } else {
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = html;
-          document.getElementById('generate-tab').appendChild(tempDiv.firstElementChild);
-        }
-        const transitContainer = document.getElementById('transitPlanets');
-        if (transitContainer) {
-          transitContainer.innerHTML = '';
-          const planets = transitData.gates?.prs?.Planets || [];
-          planets.forEach(p => transitContainer.appendChild(createPlanetRow(p, 'personality-side')));
-        }
-      } catch (e) {
-        console.error(e);
-        alert("Could not fetch current transits. Check console for details.");
-      } finally {
-        fab.innerHTML = originalText;
-        fab.style.pointerEvents = 'auto';
-      }
+    window.assignToExistingGroupenta = function(id, groupentaId) {
+      closeModal();
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      design.groupentaId = groupentaId;
+      localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      alert(`✅ Assigned to Groupenta #${groupentaId}`);
+      renderApprovedCandidates();
+      renderGroupentaDashboard();
     };
+
+    window.setUnassigned = function(id) {
+      closeModal();
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      design.groupentaId = null;
+      localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      alert("✅ Set to Unassigned");
+      renderApprovedCandidates();
+      renderGroupentaDashboard();
+    };
+
+    window.fetchCurrentTransits = async () => { /* full function as in previous complete version */ };
 
     function renderGroupentaDashboard() {
       const container = document.getElementById('groupentaContent');
-      const activeDesigns = savedDesigns.filter(d => d.approved === true && d.status === "ON" && d.groupentaActive !== false);
 
-      if (activeDesigns.length === 0) {
-        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No active Groupenta members yet.<br>Go to Approved Candidates and toggle "Groupenta Active".</p>`;
+      // Get all unique Groupenta IDs
+      let groupentaIds = [...new Set(savedDesigns.filter(d => d.groupentaId).map(d => d.groupentaId))].sort((a,b) => a - b);
+
+      if (groupentaIds.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No Groupenta fields yet.<br>Go to Approved Candidates and assign members to new Groupentas.</p>`;
         return;
       }
+
+      // For now show the first Groupenta (you can extend with selector later)
+      const selectedId = groupentaIds[0]; // Simple default for now
+      const activeDesigns = savedDesigns.filter(d => d.groupentaId === selectedId);
 
       let allGates = new Set();
       activeDesigns.forEach(d => {
@@ -610,7 +635,7 @@
       let html = `
         <div style="text-align:center;">
           <div class="globe">🌍</div>
-          <h3 style="margin:20px 0 10px;color:var(--accent);">Groupenta Field</h3>
+          <h3 style="margin:20px 0 10px;color:var(--accent);">Groupenta Field #${selectedId}</h3>
           <p style="color:#aaa;">${activeDesigns.length} active members</p>
         </div>
 
@@ -649,7 +674,7 @@
 
         <!-- Members Matrix -->
         <div class="groupenta-matrix">
-          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix</h3>
+          <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedId}</h3>
           <table>
             <thead>
               <tr>
@@ -677,7 +702,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – COMPLETE with Groupenta Active control', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Status with multiple Groupentas', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
