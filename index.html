@@ -41,11 +41,13 @@
     .design-card { background: #111; padding: 20px; border-radius: 16px; }
     .design-info { margin-bottom: 16px; }
     .library-actions { display: flex; gap: 8px; }
-    .view-btn, .status-btn, .remove-btn { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 9999px; cursor: pointer; font-weight: 600; }
+    .view-btn, .status-btn, .remove-btn, .groupenta-btn { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 9999px; cursor: pointer; font-weight: 600; }
     .view-btn { background: var(--accent); color: #000; }
     .status-btn { background: #222; color: #aaa; }
     .status-btn.on { background: #10b981; color: #000; }
     .remove-btn { background: #ff4444; color: white; }
+    .groupenta-btn { background: #10b981; color: #000; }
+    .groupenta-btn.off { background: #222; color: #aaa; }
 
     .penta-bar { height: 12px; background: #222; border-radius: 9999px; overflow: hidden; margin: 8px 0; }
     .penta-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); }
@@ -56,38 +58,26 @@
     .groupenta-flow { display: flex; width: 100%; max-width: 1100px; justify-content: space-between; align-items: center; gap: 30px; }
     .pillar { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 180px; }
     .pillar-circle { 
-      width: 110px; 
-      height: 110px; 
-      border-radius: 50%; 
-      background: #10b981; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      color: #000; 
-      font-weight: bold; 
-      text-align: center; 
-      box-shadow: 0 0 15px rgba(16,185,129,0.6); 
+      width: 110px; height: 110px; border-radius: 50%; background: #10b981; 
+      display: flex; align-items: center; justify-content: center; color: #000; 
+      font-weight: bold; text-align: center; box-shadow: 0 0 15px rgba(16,185,129,0.6); 
       transition: all 0.3s; 
     }
-    .pillar-circle:hover { 
-      box-shadow: 0 0 30px rgba(16,185,129,0.9); 
-      transform: scale(1.08); 
-    }
+    .pillar-circle:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .pillar-circle.red { background: #ef4444; color: #fff; }
-    .pillar-circle.inactive { background: #222; color: #666; box-shadow: none; }
+
     .central-pillar { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 220px; }
     .central-oval { width: 110px; height: 110px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; text-align: center; box-shadow: 0 0 15px rgba(16,185,129,0.6); }
     .central-oval.red { background: #ef4444; color: #fff; }
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
-    /* New Matrix Table */
-    .groupenta-matrix { width: 100%; max-width: 1100px; margin-top: 20px; }
+    /* Matrix Table */
     .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; }
     .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
     .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
     .groupenta-matrix td:first-child { text-align: left; font-weight: 600; color: #ddd; }
-    .groupenta-matrix .checkmark { color: #10b981; font-size: 1.4rem; }
+    .checkmark { color: #10b981; font-size: 1.4rem; }
 
     .fab { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #000; border: none; width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 10px 20px rgba(16,185,129,0.4); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; transition: all 0.3s; }
     .fab:hover { transform: scale(1.1); }
@@ -109,7 +99,7 @@
   </div>
 
   <div class="content">
-    <!-- GENERATE TAB (unchanged) -->
+    <!-- GENERATE TAB -->
     <div id="generate-tab">
       <div class="card">
         <h2 style="margin-bottom:20px;">Enter Birth Data</h2>
@@ -183,17 +173,16 @@
       Journey so far:
       - v1.0 → v1.11 : Full Group Intelligence platform
       - v2.1 : Current Global Transits + full 64-gate lookup
-      - v2.2 : Groupenta Dashboard with corrected pillars and visual diagram
-      - v2.3 : Added Members Matrix table below the diagram (12 gates horizontal, members vertical, checkmarks for activated gates)
+      - v2.2 : Groupenta Dashboard with corrected pillars
+      - v2.3 : Members Matrix + "Groupenta Active" toggle in Approved Candidates
 
-      The new section shows exactly what you asked for: a clear matrix of who carries which Groupenta gate.
-      All previous features (BodyGraph View, hover glow, red/green logic, etc.) remain fully functional.
+      You can now decide exactly which approved members are active in the current Groupenta Field.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
     const HD_API_TOKEN = "honey-lattice-2026-ubiquitous-memory-xyz789abc123";
 
-    // YOUR FULL CORRECTED GATE LOOKUP
+    // FULL GATE LOOKUP (your latest corrected version)
     const gateLookup = {
       1: { name: "The Creative", alt: "The Gate of Self-Expression", lines: {1: "Creation is independent of will", 2: "Love is light", 3: "The energy to sustain creative work", 4: "Aloneness as the medium of creativity", 5: "The energy to attract society", 6: "Objectivity"}},
       2: { name: "The Receptive", alt: "The Gate of Direction of the Self", lines: {1: "Intuition", 2: "Genius", 3: "Patience", 4: "Secretiveness", 5: "Intelligent application", 6: "Fixation"}},
@@ -366,7 +355,7 @@
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       const birthData = { date: document.getElementById('birthDate').value, time: document.getElementById('birthTime').value, place: document.getElementById('birthPlace').value };
-      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData, birth: birthData, status: "ON", approved: false });
+      savedDesigns.push({ id: Date.now(), name: name || "Untitled", data: currentData, birth: birthData, status: "ON", approved: false, groupentaActive: true });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
       renderLibrary();
@@ -530,16 +519,27 @@
       approved.forEach(d => {
         const g = d.data.general || {};
         const age = g.age ? `${g.age} ` : '';
+        const groupentaActive = d.groupentaActive !== false;
         html += `
           <div style="margin-bottom:16px;background:#111;padding:16px;border-radius:12px;">
             <strong>${d.name}</strong><br>
             <small style="color:#aaa;">${age}${g.energy_type} • ${g.inner_authority} • ${g.profile}</small>
-            <div style="margin-top:12px;">
-              <button onclick="viewDesign(${d.id});" style="width:100%;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">👁️ View Full Blueprint</button>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button onclick="viewDesign(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">👁️ View Full Blueprint</button>
+              <button onclick="toggleGroupentaActive(${d.id});" class="groupenta-btn ${groupentaActive ? '' : 'off'}">${groupentaActive ? '✅ Groupenta Active' : 'Groupenta Inactive'}</button>
             </div>
           </div>`;
       });
       container.innerHTML = html;
+    }
+
+    window.toggleGroupentaActive = function(id) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      design.groupentaActive = !design.groupentaActive;
+      localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+      renderApprovedCandidates();
+      renderGroupentaDashboard();
     };
 
     window.fetchCurrentTransits = async () => {
@@ -592,13 +592,12 @@
       }
     };
 
-    // GROUPENTA DASHBOARD (visual + new matrix table)
     function renderGroupentaDashboard() {
       const container = document.getElementById('groupentaContent');
-      const activeDesigns = savedDesigns.filter(d => d.approved === true && d.status === "ON");
+      const activeDesigns = savedDesigns.filter(d => d.approved === true && d.status === "ON" && d.groupentaActive !== false);
 
       if (activeDesigns.length === 0) {
-        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No approved members yet.<br>Go to Approved Candidates and add designs to activate the Groupenta field.</p>`;
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No active Groupenta members yet.<br>Go to Approved Candidates and toggle "Groupenta Active".</p>`;
         return;
       }
 
@@ -648,7 +647,7 @@
           </div>
         </div>
 
-        <!-- NEW MATRIX TABLE -->
+        <!-- Members Matrix -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix</h3>
           <table>
@@ -678,7 +677,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – Groupenta Dashboard + Members Matrix added', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.3 – COMPLETE with Groupenta Active control', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
