@@ -175,8 +175,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v2.4
-      =====================================
+      STORY OF THIS CODE – FOUNDATION v2.4 (FINAL)
+      =============================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -184,12 +184,9 @@
       - v2.1 : Current Global Transits + full 64-gate lookup
       - v2.2 : Groupenta Dashboard with corrected pillars
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
-      - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6
+      - v2.4 : Red X for missing gates + Line Names Matrix split into two groups of 6 + members sorted by age (oldest first)
 
-      Latest refinement (this version):
-      - Line Names Matrix now correctly shows **all unique lines** for the same gate (Personality + Design sides)
-      - If a member has the same gate on both sides with different lines, both line names are displayed (comma-separated)
-      - Everything else remains fully intact
+      Final refinement applied: All Groupenta tables (Members Matrix + both Line Names Matrices) are now sorted by age, oldest first.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -688,7 +685,13 @@
         selectedGroupentaId = groupentaIds[0];
       }
 
-      const activeDesigns = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
+      // Get active members and sort by age (oldest first)
+      let activeDesigns = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
+      activeDesigns.sort((a, b) => {
+        const ageA = parseFloat(a.data.general?.age) || 0;
+        const ageB = parseFloat(b.data.general?.age) || 0;
+        return ageB - ageA; // oldest first
+      });
 
       let allGates = new Set();
       activeDesigns.forEach(d => {
@@ -849,7 +852,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – Multiple lines per gate now shown in Line Names Matrix', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v2.4 – FINAL with age sorting (oldest first)', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
