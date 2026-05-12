@@ -41,7 +41,7 @@
     .design-card { background: #111; padding: 20px; border-radius: 16px; }
     .design-info { margin-bottom: 16px; }
     .library-actions { display: flex; gap: 8px; }
-    .view-btn, .status-btn, .remove-btn, .groupenta-btn, .wallet-btn { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 9999px; cursor: pointer; font-weight: 600; }
+    .view-btn, .status-btn, .remove-btn, .groupenta-btn, .wallet-btn, .alpha-btn { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 9999px; cursor: pointer; font-weight: 600; }
     .view-btn { background: var(--accent); color: #000; }
     .status-btn { background: #222; color: #aaa; }
     .status-btn.on { background: #10b981; color: #000; }
@@ -49,6 +49,7 @@
     .groupenta-btn { background: #10b981; color: #000; }
     .groupenta-btn.off { background: #222; color: #aaa; }
     .wallet-btn { background: #222; color: #ddd; }
+    .alpha-btn { background: #222; color: #ddd; }
 
     .penta-bar { height: 12px; background: #222; border-radius: 9999px; overflow: hidden; margin: 8px 0; }
     .penta-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); }
@@ -106,7 +107,6 @@
     <div class="tab" data-tab="compatibility">Group Compatibility</div>
     <div class="tab" data-tab="approved-candidates">Approved Candidates</div>
     <div class="tab" data-tab="groupenta-dashboard">Groupenta Dashboard</div>
-    <div class="tab" data-tab="the-forge">The Forge</div>
   </div>
 
   <div class="content">
@@ -170,14 +170,6 @@
         <div id="groupentaContent" class="groupenta-container"></div>
       </div>
     </div>
-
-    <!-- THE FORGE TAB (NEW) -->
-    <div id="the-forge-tab" class="hidden">
-      <div class="card">
-        <h2 style="margin-bottom:20px;">🔨 The Forge – Safe Multisig (4+1)</h2>
-        <div id="forgeContent"></div>
-      </div>
-    </div>
   </div>
 
   <!-- FLOATING ACTION BUTTON – Current Global Transits -->
@@ -185,8 +177,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v3.0
-      =====================================
+      STORY OF THIS CODE – FOUNDATION v3.0 (FINAL)
+      =============================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -196,13 +188,9 @@
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
       - v2.4 : Red X for missing gates + Line Names Matrix split + age sorting
       - v2.5 : Motivations Matrix (based on Color) split into two groups of 6
-      - v3.0 : Crypto Forge Layer moved to dedicated "The Forge" tab with 4+1 Safe Multisig logic
+      - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab
 
-      New in this refinement:
-      - New dedicated "The Forge" tab
-      - Forge button activates only for Groupentas with exactly 4 active members
-      - Generates a unique Alpha ID for the 5th person to be invited
-      - All previous functionality fully preserved
+      This version has the Forge section back inside the Groupenta Dashboard and full Alpha ID management available directly from the Library tab.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -319,7 +307,6 @@
         if (tab.dataset.tab === 'compatibility') renderCompatibility();
         if (tab.dataset.tab === 'approved-candidates') renderApprovedCandidates();
         if (tab.dataset.tab === 'groupenta-dashboard') renderGroupentaDashboard();
-        if (tab.dataset.tab === 'the-forge') renderTheForge();
       });
     });
 
@@ -400,6 +387,7 @@
       if (!currentData) return;
       const name = prompt("Name this design", currentData.general?.energy_type || "Untitled");
       const walletAddress = prompt("Enter wallet address (EOA) for this blueprint", "");
+      const alphaId = prompt("Enter Alpha ID for this blueprint (if any)", "");
       const birthData = { date: document.getElementById('birthDate').value, time: document.getElementById('birthTime').value, place: document.getElementById('birthPlace').value };
       savedDesigns.push({ 
         id: Date.now(), 
@@ -409,7 +397,8 @@
         status: "ON", 
         approved: false, 
         groupentaId: null,
-        walletAddress: walletAddress || null
+        walletAddress: walletAddress || null,
+        alphaId: alphaId || null
       });
       localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
       alert("✅ Saved to Library");
@@ -430,17 +419,20 @@
         if (!d.status) d.status = "ON";
         const statusClass = d.status === "ON" ? "status-btn on" : "status-btn";
         const walletText = d.walletAddress ? d.walletAddress.substring(0,8) + '...' : 'No wallet';
+        const alphaText = d.alphaId ? d.alphaId : 'No Alpha ID';
         return `
           <div class="design-card">
             <div class="design-info">
               <strong>${d.name}</strong><br>
               <small style="color:var(--accent)">${age}${g.energy_type} • ${g.inner_authority} • ${g.profile}</small><br>
-              <small style="color:#888">Wallet: ${walletText}</small>
+              <small style="color:#888">Wallet: ${walletText}</small><br>
+              <small style="color:#888">Alpha ID: ${alphaText}</small>
             </div>
             <div class="library-actions">
               <button class="view-btn" onclick="viewDesign(${d.id}); event.stopImmediatePropagation();">👁️ View</button>
               <button class="${statusClass}" onclick="toggleStatus(${d.id}); event.stopImmediatePropagation();">${d.status}</button>
               <button class="wallet-btn" onclick="updateWalletAddress(${d.id}); event.stopImmediatePropagation();">🔑 Wallet</button>
+              <button class="alpha-btn" onclick="updateAlphaId(${d.id}); event.stopImmediatePropagation();">Alpha ID</button>
               <button class="remove-btn" onclick="removeDesign(${d.id}); event.stopImmediatePropagation();">🗑️ Remove</button>
             </div>
           </div>`;
@@ -453,6 +445,18 @@
       const newAddress = prompt("Update wallet address for " + design.name, design.walletAddress || "");
       if (newAddress !== null) {
         design.walletAddress = newAddress.trim() || null;
+        localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
+        renderLibrary();
+        renderApprovedCandidates();
+      }
+    };
+
+    window.updateAlphaId = function(id) {
+      const design = savedDesigns.find(d => d.id === id);
+      if (!design) return;
+      const newAlpha = prompt("Update Alpha ID for " + design.name, design.alphaId || "");
+      if (newAlpha !== null) {
+        design.alphaId = newAlpha.trim() || null;
         localStorage.setItem("hdGroupDesigns", JSON.stringify(savedDesigns));
         renderLibrary();
         renderApprovedCandidates();
@@ -592,11 +596,13 @@
         const groupentaId = d.groupentaId || null;
         let statusText = groupentaId ? `Groupenta #${groupentaId}` : "Unassigned";
         const walletText = d.walletAddress ? d.walletAddress.substring(0,8)+'...' : '—';
+        const alphaText = d.alphaId ? d.alphaId : '—';
         html += `
           <div style="margin-bottom:16px;background:#111;padding:16px;border-radius:12px;">
             <strong>${d.name}</strong><br>
             <small style="color:#aaa;">${age}${g.energy_type} • ${g.inner_authority} • ${g.profile}</small><br>
-            <small style="color:#888">Wallet: ${walletText}</small>
+            <small style="color:#888">Wallet: ${walletText}</small><br>
+            <small style="color:#888">Alpha ID: ${alphaText}</small>
             <div style="margin-top:12px;display:flex;gap:8px;">
               <button onclick="viewDesign(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">👁️ View Full Blueprint</button>
               <button onclick="showGroupentaStatusModal(${d.id});" style="flex:1;background:#10b981;color:#000;border:none;padding:10px;border-radius:9999px;cursor:pointer;">Groupenta Status: ${statusText}</button>
@@ -651,7 +657,6 @@
       alert(`✅ Assigned to new Groupenta #${design.groupentaId}`);
       renderApprovedCandidates();
       renderGroupentaDashboard();
-      renderTheForge();
     };
 
     window.assignToExistingGroupenta = function(id, groupentaId) {
@@ -663,7 +668,6 @@
       alert(`✅ Assigned to Groupenta #${groupentaId}`);
       renderApprovedCandidates();
       renderGroupentaDashboard();
-      renderTheForge();
     };
 
     window.setUnassigned = function(id) {
@@ -675,7 +679,6 @@
       alert("✅ Set to Unassigned");
       renderApprovedCandidates();
       renderGroupentaDashboard();
-      renderTheForge();
     };
 
     window.fetchCurrentTransits = async () => {
@@ -987,57 +990,36 @@
         });
         html += `</tr>`;
       });
-      html += `</tbody></table></div>`;
+      html += `</tbody></table></div>
+
+        <!-- Crypto Forge Layer – 4+1 Safe Multisig -->
+        <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
+          <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Crypto Forge – Safe Multisig (4+1)</h3>
+          <p style="margin-bottom:16px;color:#aaa;">Exactly 4 active members are required to forge a collective Safe multisig wallet. This generates a unique Alpha ID for the 5th person to be invited.</p>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span style="font-weight:600;">Current Groupenta #${selectedGroupentaId} members:</span>
+            <span style="background:#222;padding:4px 12px;border-radius:9999px;">${activeDesigns.length}/4</span>
+          </div>
+          ${activeDesigns.length === 4 ? 
+            `<button onclick="forgeSafeMultisig()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 FORGE SAFE MULTISIG (4+1)</button>` : 
+            `<button style="width:100%;padding:18px;background:#222;color:#666;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:not-allowed;">Requires exactly 4 members to forge</button>`
+          }
+        </div>`;
 
       container.innerHTML = html;
     }
 
-    // NEW: Render The Forge tab
-    function renderTheForge() {
-      const container = document.getElementById('forgeContent');
-
-      let groupentaIds = [...new Set(savedDesigns.filter(d => d.groupentaId !== null && d.groupentaId !== undefined).map(d => d.groupentaId))].sort((a,b) => a - b);
-
-      if (groupentaIds.length === 0) {
-        container.innerHTML = `<p style="text-align:center;color:#888;padding:60px;">No Groupenta fields yet.<br>Go to Approved Candidates and assign members to create Groupentas.</p>`;
-        return;
-      }
-
-      let html = `<h3 style="margin-bottom:20px;">Active Groupentas ready for forging (4+1 structure)</h3>`;
-
-      groupentaIds.forEach(id => {
-        const membersInGroup = savedDesigns.filter(d => d.groupentaId === id && d.approved && d.status === "ON");
-        const memberCount = membersInGroup.length;
-
-        html += `
-          <div style="margin-bottom:20px;background:#111;padding:20px;border-radius:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <strong>Groupenta #${id}</strong>
-              <span style="background:#222;padding:4px 12px;border-radius:9999px;font-size:0.95rem;">${memberCount} members</span>
-            </div>
-            ${memberCount === 4 ? 
-              `<button onclick="forgeSafeMultisig(${id});" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 FORGE SAFE MULTISIG (4+1) – Generate Alpha ID for 5th person</button>` : 
-              `<button style="width:100%;padding:18px;background:#222;color:#666;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:not-allowed;">Requires exactly 4 members to forge</button>`
-            }
-          </div>`;
-      });
-
-      container.innerHTML = html;
-    }
-
-    window.forgeSafeMultisig = function(groupentaId) {
-      const activeMembers = savedDesigns.filter(d => d.groupentaId === groupentaId && d.approved && d.status === "ON");
+    window.forgeSafeMultisig = function() {
+      const activeMembers = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
       if (activeMembers.length !== 4) {
         alert("Groupenta must have exactly 4 active members to forge.");
         return;
       }
 
-      // Generate unique Alpha ID for the 5th person
       const alphaId = "ALPHA-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // Store the alpha invite with the Groupenta
       let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
-      forgeConfigs[groupentaId] = {
+      forgeConfigs[selectedGroupentaId] = {
         alphaId: alphaId,
         threshold: 3,
         forgedAt: new Date().toISOString()
@@ -1049,7 +1031,7 @@
       let modalHtml = `
         <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:3000;">
           <div style="background:#141414;padding:30px;border-radius:20px;max-width:520px;width:90%;">
-            <h2 style="margin-bottom:20px;color:#10b981;">🔨 Safe Multisig Forged for Groupenta #${groupentaId}</h2>
+            <h2 style="margin-bottom:20px;color:#10b981;">🔨 Safe Multisig Forged for Groupenta #${selectedGroupentaId}</h2>
             <p style="margin-bottom:16px;">4 members confirmed. Alpha Invite generated for the 5th person:</p>
             <div style="background:#111;padding:16px;border-radius:12px;margin-bottom:24px;font-size:1.3rem;font-weight:700;text-align:center;letter-spacing:2px;">${alphaId}</div>
             <button onclick="navigator.clipboard.writeText('${alphaId}').then(()=>alert('Alpha ID copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:16px;">📋 Copy Alpha ID</button>
@@ -1068,7 +1050,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v3.0 – The Forge tab + 4+1 Safe Multisig logic', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v3.0 – Forge restored to Groupenta Dashboard + Alpha ID from Library', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
