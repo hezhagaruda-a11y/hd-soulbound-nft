@@ -188,12 +188,13 @@
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
       - v2.4 : Red X for missing gates + Line Names Matrix split + age sorting
       - v2.5 : Motivations Matrix (based on Color) split into two groups of 6
-      - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab
+      - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab + persistent Alpha ID + 12-gate functional requirement
 
       Latest refinement applied:
-      - Forge button now generates Alpha ID only once per Groupenta.
+      - Forge button generates Alpha ID only once per Groupenta.
       - Existing Alpha ID is shown persistently with copy button.
-      - When a blueprint with the matching Alpha ID is assigned to the Groupenta, a new section appears showing the 5th member’s summary and bodygraph.
+      - When a blueprint with the matching Alpha ID is assigned to the Groupenta, the 5th Member Activated section appears reliably.
+      - Forge button now requires exactly 4 active members AND all 12 penta gates collectively activated (otherwise shows "Groupenta Not Functional").
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -761,6 +762,11 @@
         if (d.data.gates?.des?.Planets) d.data.gates.des.Planets.forEach(p => allGates.add(p.Gate));
       });
 
+      // NEW: Check if Groupenta is fully functional (exactly 4 members + all 12 penta gates)
+      const memberCount = activeDesigns.length;
+      const all12GatesActivated = PENTA_GATES.every(g => allGates.has(g));
+      const isFunctional = (memberCount === 4) && all12GatesActivated;
+
       let dropdownOptions = groupentaIds.map(id => `<option value="${id}" ${id === selectedGroupentaId ? 'selected' : ''}>Groupenta #${id}</option>`).join('');
 
       // Load forge config for this Groupenta
@@ -775,11 +781,11 @@
       }
 
       let forgeHtml = '';
-      if (activeDesigns.length === 4 && !existingAlphaId) {
+      if (isFunctional && !existingAlphaId) {
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Crypto Forge – Safe Multisig (4+1)</h3>
-            <p style="margin-bottom:16px;color:#aaa;">Exactly 4 active members are required to forge a collective Safe multisig wallet. This generates a unique Alpha ID for the 5th person to be invited.</p>
+            <p style="margin-bottom:16px;color:#aaa;">Groupenta is Functional &amp; Ready (4 members + all 12 gates). Generate Alpha ID for the 5th person.</p>
             <button onclick="forgeSafeMultisig()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 FORGE SAFE MULTISIG (4+1)</button>
           </div>`;
       } else if (existingAlphaId) {
@@ -793,7 +799,7 @@
               <h4 style="margin:20px 0 12px;color:#10b981;">✅ 5th Member Activated</h4>
               <div style="background:#222;padding:16px;border-radius:12px;">
                 <strong>${fifthMember.name}</strong><br>
-                <small>${fifthMember.data.general?.energy_type} • ${fifthMember.data.general?.profile} • Age ${fifthMember.data.general?.age || '—'}</small>
+                <small>${fifthMember.data.general?.energy_type || '—'} • ${fifthMember.data.general?.profile || '—'} • Age ${fifthMember.data.general?.age || '—'}</small>
                 <div class="bodygraph-container" style="margin-top:12px;">
                   <img src="" id="fifthBodygraph" style="max-height:300px;width:100%;border-radius:12px;" alt="5th Member BodyGraph">
                 </div>
@@ -806,7 +812,7 @@
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Crypto Forge – Safe Multisig (4+1)</h3>
-            <p style="color:#aaa;">Requires exactly 4 active members to forge.</p>
+            <p style="color:#aaa;">Groupenta Not Functional<br>Requires exactly 4 active members AND all 12 penta gates collectively activated.</p>
           </div>`;
       }
 
@@ -1047,7 +1053,7 @@
 
       container.innerHTML = html;
 
-      // If 5th member exists, try to load their bodygraph
+      // Load 5th member bodygraph if present
       if (fifthMember && fifthMember.birth && fifthMember.birth.date) {
         setTimeout(() => {
           const imgEl = document.getElementById('fifthBodygraph');
@@ -1110,7 +1116,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v3.0 – Persistent Alpha ID + 5th member detection in Forge section', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v3.0 – Forge with persistent Alpha ID + 12-gate functional check', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
