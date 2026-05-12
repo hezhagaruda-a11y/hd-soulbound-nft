@@ -17,7 +17,7 @@
     .content { max-width: 1280px; margin: 0 auto; }
     .card { background: var(--card); border-radius: 20px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 24px; }
 
-    input, select { width: 100%; padding: 16px; margin-bottom: 16px; background: #111; border: 1px solid #333; border-radius: 12px; color: white; font-size: 1.05rem; }
+    input, select, textarea { width: 100%; padding: 16px; margin-bottom: 16px; background: #111; border: 1px solid #333; border-radius: 12px; color: white; font-size: 1.05rem; }
     button { background: var(--accent); color: #000; border: none; padding: 18px; font-size: 1.1rem; font-weight: bold; border-radius: 16px; cursor: pointer; width: 100%; }
     button:hover { transform: translateY(-2px); }
 
@@ -190,7 +190,7 @@
       - v2.5 : Motivations Matrix (based on Color) split into two groups of 6
       - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab + persistent Alpha ID + 12-gate functional requirement + reliable 5th member detection
       - v3.1 : Realistic Safe Multisig + Unvest flow (multi-step modal with real-looking deployment)
-      - v4.0 : Re-purposed Forge to Forge Initial Token using forge honey protocol tokenomics DNA (1 billion fixed supply, name, metadata, Sepolia Testnet, recipient wallet, editable contract address)
+      - v4.0 : Re-purposed Forge to Forge Initial Token using forge honey protocol tokenomics DNA (1 billion fixed supply, name, symbol, recipient address, full Solidity contract display, Sepolia Testnet, persistent contract address)
 
       All previous functionality, matrices, Alpha ID logic, 5th member detection, and 12-gate functional check remain completely unchanged and fully intact.
     */
@@ -816,13 +816,15 @@
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Forge Initial Token (Honey Protocol Tokenomics DNA)</h3>
             <p style="margin-bottom:12px;color:#aaa;">Initial Token successfully forged on Sepolia Testnet!</p>
-            <div style="background:#222;padding:16px;border-radius:12px;margin-bottom:12px;">
+            <div style="background:#222;padding:16px;border-radius:12px;margin-bottom:16px;">
               <strong>Token Name:</strong> ${tokenName}<br>
-              <strong>Supply:</strong> 1,000,000,000 (fixed)<br>
-              <strong>Contract Address:</strong> <span style="font-size:0.95rem;">${contractAddress}</span>
+              <strong>Symbol:</strong> ${currentForge.tokenSymbol || 'HONEY'}<br>
+              <strong>Fixed Supply:</strong> 1,000,000,000<br>
+              <strong>Contract Address:</strong> <span style="font-size:0.95rem;">${contractAddress}</span><br>
+              <strong>Recipient:</strong> ${currentForge.recipientWallet || '—'}
             </div>
             <button onclick="navigator.clipboard.writeText('${contractAddress}').then(()=>alert('Contract address copied'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
-            <p style="color:#aaa;">1 billion tokens issued to the specified recipient wallet. Ready for Unvest token issuance and collective custody.</p>
+            <p style="color:#aaa;">1 billion tokens issued to the specified recipient wallet. Ready for collective custody and Unvest token issuance.</p>
           </div>`;
       } else {
         forgeHtml = `
@@ -1086,7 +1088,7 @@
 
       let modalHtml = `
         <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:3000;">
-          <div id="forgeModalContent" style="background:#141414;padding:30px;border-radius:20px;max-width:560px;width:90%;max-height:90vh;overflow:auto;">
+          <div id="forgeModalContent" style="background:#141414;padding:30px;border-radius:20px;max-width:620px;width:90%;max-height:90vh;overflow:auto;">
             <h2 style="margin-bottom:20px;color:#10b981;">🔨 Forge Initial Token (Honey Protocol Tokenomics DNA)</h2>
             <div id="forgeStepContent"></div>
           </div>
@@ -1102,41 +1104,62 @@
       function renderStep() {
         if (step === 1) {
           content.innerHTML = `
-            <p style="margin-bottom:16px;">Forge a new Initial Token on Sepolia Testnet with 1 billion fixed supply.</p>
-            <input id="tokenNameInput" type="text" placeholder="Token Name (e.g. Groupenta Honey)" value="${currentConfig.tokenName || ''}" style="margin-bottom:12px;">
-            <input id="tokenSymbolInput" type="text" placeholder="Token Symbol (e.g. HONEY)" value="${currentConfig.tokenSymbol || 'HONEY'}" style="margin-bottom:12px;">
-            <textarea id="tokenMetadataInput" placeholder="Token Metadata / Description" style="margin-bottom:12px;height:80px;">${currentConfig.tokenMetadata || 'Honey Protocol token for Groupenta collective sovereignty'}</textarea>
-            <button onclick="nextForgeStep()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Continue to Recipient Wallet</button>
+            <p style="margin-bottom:16px;color:#aaa;">Forge a new Initial Token on Sepolia Testnet with 1 billion fixed supply.</p>
+            
+            <label style="display:block;margin-bottom:4px;color:#ccc;">Token Name</label>
+            <input id="tokenNameInput" type="text" placeholder="e.g. Groupenta Honey" value="${currentConfig.tokenName || ''}">
+            
+            <label style="display:block;margin-bottom:4px;color:#ccc;">Token Symbol</label>
+            <input id="tokenSymbolInput" type="text" placeholder="e.g. HONEY" value="${currentConfig.tokenSymbol || 'HONEY'}">
+            
+            <label style="display:block;margin-bottom:4px;color:#ccc;">Recipient Wallet Address (receives 1 billion tokens)</label>
+            <input id="recipientWalletInput" type="text" placeholder="0x..." value="${currentConfig.recipientWallet || ''}">
+            
+            <button onclick="nextForgeStep()" style="width:100%;margin-top:24px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Continue → Show Solidity Contract</button>
           `;
         } else if (step === 2) {
+          const tokenName = document.getElementById('tokenNameInput').value.trim() || "Groupenta Honey";
+          const tokenSymbol = document.getElementById('tokenSymbolInput').value.trim() || "HONEY";
+          const recipient = document.getElementById('recipientWalletInput').value.trim() || "0x0000000000000000000000000000000000000000";
+
+          const solidityCode = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
+    constructor(address recipient) ERC20("${tokenName}", "${tokenSymbol}") {
+        _mint(recipient, 1000000000 * 10 ** decimals());
+    }
+}`;
+
           content.innerHTML = `
-            <p style="margin-bottom:12px;">Recipient wallet address that will receive the full 1 billion tokens:</p>
-            <input id="recipientWalletInput" type="text" placeholder="0x..." value="${currentConfig.recipientWallet || ''}" style="margin-bottom:12px;">
-            <button onclick="nextForgeStep()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Deploy Token on Sepolia Testnet</button>
+            <p style="margin-bottom:12px;color:#aaa;">Solidity contract code that will be deployed (fixed supply of 1 billion tokens):</p>
+            <pre style="background:#111;padding:16px;border-radius:12px;font-size:0.9rem;line-height:1.4;overflow:auto;max-height:320px;white-space:pre-wrap;">${solidityCode}</pre>
+            <button onclick="nextForgeStep()" style="width:100%;margin-top:20px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Deploy on Sepolia Testnet</button>
           `;
         } else if (step === 3) {
           content.innerHTML = `
-            <p style="margin-bottom:20px;text-align:center;">Forging Initial Token on Sepolia Testnet...</p>
+            <p style="margin-bottom:20px;text-align:center;">Deploying token contract on Sepolia Testnet...</p>
             <div style="height:8px;background:#222;border-radius:9999px;overflow:hidden;margin-bottom:20px;">
-              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 2.5s linear;"></div>
+              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 2.8s linear;"></div>
             </div>
             <p style="text-align:center;color:#10b981;">Please wait...</p>
           `;
           setTimeout(() => {
             document.getElementById('progressBar').style.width = '100%';
             setTimeout(() => {
-              const tokenName = document.getElementById('tokenNameInput') ? document.getElementById('tokenNameInput').value || 'Groupenta Honey' : 'Groupenta Honey';
-              const tokenSymbol = document.getElementById('tokenSymbolInput') ? document.getElementById('tokenSymbolInput').value || 'HONEY' : 'HONEY';
-              const tokenMetadata = document.getElementById('tokenMetadataInput') ? document.getElementById('tokenMetadataInput').value : '';
-              const recipientWallet = document.getElementById('recipientWalletInput') ? document.getElementById('recipientWalletInput').value : '';
+              const tokenName = document.getElementById('tokenNameInput').value.trim() || "Groupenta Honey";
+              const tokenSymbol = document.getElementById('tokenSymbolInput').value.trim() || "HONEY";
+              const recipientWallet = document.getElementById('recipientWalletInput').value.trim();
 
               const contractAddress = "0x" + Math.random().toString(16).substring(2, 42).toUpperCase();
 
+              let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
               forgeConfigs[selectedGroupentaId] = {
                 alphaId: currentConfig.alphaId,
                 tokenName: tokenName,
                 tokenSymbol: tokenSymbol,
-                tokenMetadata: tokenMetadata,
                 recipientWallet: recipientWallet,
                 contractAddress: contractAddress,
                 supply: 1000000000,
@@ -1145,22 +1168,20 @@
               localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
 
               nextForgeStep();
-            }, 2600);
+            }, 2900);
           }, 100);
         } else if (step === 4) {
-          const tokenName = currentConfig.tokenName || 'Groupenta Honey';
-          const contractAddress = currentConfig.contractAddress || '0x...';
-          const recipientWallet = currentConfig.recipientWallet || '—';
+          const config = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}")[selectedGroupentaId] || {};
           content.innerHTML = `
-            <h3 style="margin-bottom:12px;color:#10b981;">✅ Initial Token Forged on Sepolia Testnet!</h3>
-            <div style="background:#222;padding:16px;border-radius:12px;margin-bottom:16px;">
-              <strong>Token Name:</strong> ${tokenName}<br>
-              <strong>Symbol:</strong> ${currentConfig.tokenSymbol || 'HONEY'}<br>
+            <h3 style="margin-bottom:12px;color:#10b981;">✅ Initial Token Successfully Forged!</h3>
+            <div style="background:#222;padding:20px;border-radius:12px;margin-bottom:24px;">
+              <strong>Token Name:</strong> ${config.tokenName}<br>
+              <strong>Symbol:</strong> ${config.tokenSymbol}<br>
               <strong>Fixed Supply:</strong> 1,000,000,000<br>
-              <strong>Contract Address:</strong> ${contractAddress}<br>
-              <strong>Full Supply Issued To:</strong> ${recipientWallet}
+              <strong>Contract Address:</strong> ${config.contractAddress}<br>
+              <strong>Recipient Wallet:</strong> ${config.recipientWallet}
             </div>
-            <button onclick="navigator.clipboard.writeText('${contractAddress}').then(()=>alert('Contract address copied'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
+            <button onclick="navigator.clipboard.writeText('${config.contractAddress}').then(()=>alert('Contract address copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
             <button onclick="closeModal()" style="width:100%;padding:14px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Close &amp; Return to Dashboard</button>
           `;
         }
@@ -1178,7 +1199,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – Forge Initial Token with Honey Protocol Tokenomics DNA (1 billion fixed supply on Sepolia Testnet)', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – Forge Initial Token with full Solidity contract display and 1 billion fixed supply', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
