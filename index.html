@@ -177,8 +177,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v4.0
-      =====================================
+      STORY OF THIS CODE – FOUNDATION v4.0 (Refined)
+      ================================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -189,10 +189,13 @@
       - v2.4 : Red X for missing gates + Line Names Matrix split + age sorting
       - v2.5 : Motivations Matrix (based on Color) split into two groups of 6
       - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab + persistent Alpha ID + 12-gate functional requirement + reliable 5th member detection
-      - v3.1 : Realistic Safe Multisig + Unvest flow (multi-step modal with real-looking deployment)
+      - v3.1 : Realistic Safe Multisig + Unvest flow
       - v4.0 : Re-purposed Forge to Forge Initial Token using forge honey protocol tokenomics DNA (1 billion fixed supply, name, symbol, recipient address, full Solidity contract display, Sepolia Testnet, persistent contract address)
 
-      All previous functionality, matrices, Alpha ID logic, 5th member detection, and 12-gate functional check remain completely unchanged and fully intact.
+      Latest refinement (this version):
+      - Recipient wallet address is now always clearly displayed in the success screen
+      - Added direct "Open in Remix & Deploy on Sepolia" button that opens Remix with the exact contract code pre-filled
+      - All previous matrices, Alpha ID logic, 5th member detection, and 12-gate functional check remain completely unchanged
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -821,9 +824,10 @@
               <strong>Symbol:</strong> ${currentForge.tokenSymbol || 'HONEY'}<br>
               <strong>Fixed Supply:</strong> 1,000,000,000<br>
               <strong>Contract Address:</strong> <span style="font-size:0.95rem;">${contractAddress}</span><br>
-              <strong>Recipient:</strong> ${currentForge.recipientWallet || '—'}
+              <strong>Recipient Wallet:</strong> ${currentForge.recipientWallet || '—'}
             </div>
             <button onclick="navigator.clipboard.writeText('${contractAddress}').then(()=>alert('Contract address copied'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
+            <button onclick="openRemixWithContract()" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">🚀 Open in Remix &amp; Deploy on Sepolia</button>
             <p style="color:#aaa;">1 billion tokens issued to the specified recipient wallet. Ready for collective custody and Unvest token issuance.</p>
           </div>`;
       } else {
@@ -1118,9 +1122,9 @@
             <button onclick="nextForgeStep()" style="width:100%;margin-top:24px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Continue → Show Solidity Contract</button>
           `;
         } else if (step === 2) {
-          const tokenName = document.getElementById('tokenNameInput').value.trim() || "Groupenta Honey";
-          const tokenSymbol = document.getElementById('tokenSymbolInput').value.trim() || "HONEY";
-          const recipient = document.getElementById('recipientWalletInput').value.trim() || "0x0000000000000000000000000000000000000000";
+          const tokenName = (document.getElementById('tokenNameInput') && document.getElementById('tokenNameInput').value.trim()) || "Groupenta Honey";
+          const tokenSymbol = (document.getElementById('tokenSymbolInput') && document.getElementById('tokenSymbolInput').value.trim()) || "HONEY";
+          const recipient = (document.getElementById('recipientWalletInput') && document.getElementById('recipientWalletInput').value.trim()) || "";
 
           const solidityCode = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
@@ -1136,53 +1140,10 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
           content.innerHTML = `
             <p style="margin-bottom:12px;color:#aaa;">Solidity contract code that will be deployed (fixed supply of 1 billion tokens):</p>
             <pre style="background:#111;padding:16px;border-radius:12px;font-size:0.9rem;line-height:1.4;overflow:auto;max-height:320px;white-space:pre-wrap;">${solidityCode}</pre>
-            <button onclick="nextForgeStep()" style="width:100%;margin-top:20px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Deploy on Sepolia Testnet</button>
-          `;
-        } else if (step === 3) {
-          content.innerHTML = `
-            <p style="margin-bottom:20px;text-align:center;">Deploying token contract on Sepolia Testnet...</p>
-            <div style="height:8px;background:#222;border-radius:9999px;overflow:hidden;margin-bottom:20px;">
-              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 2.8s linear;"></div>
+            <div style="margin-top:16px;display:flex;gap:12px;">
+              <button onclick="openRemix('${encodeURIComponent(solidityCode)}')" style="flex:1;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;font-weight:600;">🚀 Open in Remix &amp; Deploy on Sepolia</button>
+              <button onclick="nextForgeStep()" style="flex:1;padding:16px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Save &amp; Close</button>
             </div>
-            <p style="text-align:center;color:#10b981;">Please wait...</p>
-          `;
-          setTimeout(() => {
-            document.getElementById('progressBar').style.width = '100%';
-            setTimeout(() => {
-              const tokenName = document.getElementById('tokenNameInput').value.trim() || "Groupenta Honey";
-              const tokenSymbol = document.getElementById('tokenSymbolInput').value.trim() || "HONEY";
-              const recipientWallet = document.getElementById('recipientWalletInput').value.trim();
-
-              const contractAddress = "0x" + Math.random().toString(16).substring(2, 42).toUpperCase();
-
-              let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
-              forgeConfigs[selectedGroupentaId] = {
-                alphaId: currentConfig.alphaId,
-                tokenName: tokenName,
-                tokenSymbol: tokenSymbol,
-                recipientWallet: recipientWallet,
-                contractAddress: contractAddress,
-                supply: 1000000000,
-                forgedAt: new Date().toISOString()
-              };
-              localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
-
-              nextForgeStep();
-            }, 2900);
-          }, 100);
-        } else if (step === 4) {
-          const config = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}")[selectedGroupentaId] || {};
-          content.innerHTML = `
-            <h3 style="margin-bottom:12px;color:#10b981;">✅ Initial Token Successfully Forged!</h3>
-            <div style="background:#222;padding:20px;border-radius:12px;margin-bottom:24px;">
-              <strong>Token Name:</strong> ${config.tokenName}<br>
-              <strong>Symbol:</strong> ${config.tokenSymbol}<br>
-              <strong>Fixed Supply:</strong> 1,000,000,000<br>
-              <strong>Contract Address:</strong> ${config.contractAddress}<br>
-              <strong>Recipient Wallet:</strong> ${config.recipientWallet}
-            </div>
-            <button onclick="navigator.clipboard.writeText('${config.contractAddress}').then(()=>alert('Contract address copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
-            <button onclick="closeModal()" style="width:100%;padding:14px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Close &amp; Return to Dashboard</button>
           `;
         }
       }
@@ -1192,6 +1153,12 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
         renderStep();
       };
 
+      window.openRemix = function(encodedCode) {
+        const url = `https://remix.ethereum.org/#code=${encodedCode}`;
+        window.open(url, '_blank');
+        closeModal();
+      };
+
       renderStep();
     };
 
@@ -1199,7 +1166,7 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – Forge Initial Token with full Solidity contract display and 1 billion fixed supply', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – Forge Initial Token with full Solidity contract + direct Remix deployment', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
