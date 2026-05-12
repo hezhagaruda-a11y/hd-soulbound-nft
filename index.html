@@ -177,8 +177,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v3.0 (FINAL)
-      =============================================
+      STORY OF THIS CODE – FOUNDATION v3.1
+      =====================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -188,11 +188,10 @@
       - v2.3 : Members Matrix + Groupenta Status with multiple Groupentas
       - v2.4 : Red X for missing gates + Line Names Matrix split + age sorting
       - v2.5 : Motivations Matrix (based on Color) split into two groups of 6
-      - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) restored to Groupenta Dashboard + Alpha ID assignment from Library tab + persistent Alpha ID + 12-gate functional requirement + reliable 5th member detection
+      - v3.0 : Crypto Forge Layer (Safe Multisig 4+1) with persistent Alpha ID + 12-gate check
+      - v3.1 : Realistic Safe Multisig + Unvest flow (multi-step modal with real-looking deployment)
 
-      Latest refinement applied (this version):
-      - Forge Safe Multisig (5/5) button now works correctly when the 5th member is activated.
-      - No more "exactly 4 members" error on the final forge.
+      This version makes the final Forge (5/5) button lead to a full, convincing Safe + Unvest simulation.
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -769,6 +768,7 @@
       let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
       const currentForge = forgeConfigs[selectedGroupentaId] || {};
       const existingAlphaId = currentForge.alphaId || null;
+      const safeAddress = currentForge.safeAddress || null;
 
       let fifthMember = null;
       if (existingAlphaId) {
@@ -792,7 +792,7 @@
             <button onclick="navigator.clipboard.writeText('${existingAlphaId}').then(()=>alert('Alpha ID copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:16px;">📋 Copy Alpha ID</button>
             <p style="color:#aaa;">Waiting for the 5th person to join using this Alpha ID.</p>
           </div>`;
-      } else if (existingAlphaId && fifthMember) {
+      } else if (existingAlphaId && fifthMember && !safeAddress) {
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Crypto Forge – Safe Multisig (4+1)</h3>
@@ -808,6 +808,15 @@
               <button onclick="viewDesign(${fifthMember.id});" style="background:#10b981;color:#000;border:none;padding:10px 20px;border-radius:9999px;cursor:pointer;font-weight:600;box-shadow:0 0 15px rgba(16,185,129,0.6);">👁️ View Blueprint</button>
             </div>
             <button onclick="forgeSafeMultisig()" style="width:100%;margin-top:16px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 FORGE SAFE MULTISIG (5/5)</button>
+          </div>`;
+      } else if (safeAddress) {
+        forgeHtml = `
+          <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
+            <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Crypto Forge – Safe Multisig (5/5)</h3>
+            <p style="margin-bottom:12px;color:#aaa;">Safe Multisig successfully deployed!</p>
+            <div style="background:#222;padding:16px;border-radius:12px;margin-bottom:16px;font-size:1.1rem;font-weight:700;text-align:center;letter-spacing:1px;">${safeAddress}</div>
+            <button onclick="navigator.clipboard.writeText('${safeAddress}').then(()=>alert('Safe address copied'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:16px;">📋 Copy Safe Address</button>
+            <p style="color:#aaa;">This Safe wallet is now controlled by the 5 EOAs and ready for Unvest token issuance and collective custody.</p>
           </div>`;
       } else {
         forgeHtml = `
@@ -1061,15 +1070,13 @@
 
       let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
       let alphaId = forgeConfigs[selectedGroupentaId] ? forgeConfigs[selectedGroupentaId].alphaId : null;
+      let safeAddress = forgeConfigs[selectedGroupentaId] ? forgeConfigs[selectedGroupentaId].safeAddress : null;
 
       if (memberCount === 4 && !alphaId) {
-        // Generate new Alpha ID
+        // Step for 4 members - generate Alpha ID
         alphaId = "ALPHA-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        forgeConfigs[selectedGroupentaId] = {
-          alphaId: alphaId,
-          threshold: 3,
-          forgedAt: new Date().toISOString()
-        };
+        forgeConfigs[selectedGroupentaId] = forgeConfigs[selectedGroupentaId] || {};
+        forgeConfigs[selectedGroupentaId].alphaId = alphaId;
         localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
 
         let membersList = activeMembers.map(d => `${d.name} (${d.walletAddress ? d.walletAddress.substring(0,8)+'...' : '—'})`).join('<br>');
@@ -1090,10 +1097,90 @@
         const modal = document.createElement('div');
         modal.innerHTML = modalHtml;
         document.body.appendChild(modal);
-      } else if (memberCount === 5 && alphaId) {
-        // Final 5/5 forge
-        alert(`✅ Safe Multisig (5/5) fully forged for Groupenta #${selectedGroupentaId}!\n\nAll 5 EOAs now control the collective wallet.\nReady for Unvest token issuance and collective custody.`);
-        console.log('%cSafe Multisig (5/5) successfully forged for Groupenta #' + selectedGroupentaId, 'color:#10b981;font-weight:bold');
+      } else if (memberCount === 5 && alphaId && !safeAddress) {
+        // Final 5/5 realistic forge flow
+        let step = 1;
+        let threshold = 3;
+
+        let modalHtml = `
+          <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:3000;">
+            <div id="forgeModalContent" style="background:#141414;padding:30px;border-radius:20px;max-width:560px;width:90%;max-height:90vh;overflow:auto;">
+              <h2 style="margin-bottom:20px;color:#10b981;">🔨 Creating Safe Multisig for Groupenta #${selectedGroupentaId}</h2>
+              <div id="forgeStepContent"></div>
+            </div>
+          </div>
+        `;
+
+        const modal = document.createElement('div');
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
+
+        const content = document.getElementById('forgeStepContent');
+
+        function renderStep() {
+          if (step === 1) {
+            let ownersHTML = activeMembers.map(d => `
+              <div style="background:#222;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;">
+                <span><strong>${d.name}</strong></span>
+                <span style="color:#aaa;">${d.walletAddress ? d.walletAddress.substring(0,8)+'...' : '—'}</span>
+              </div>`).join('');
+            content.innerHTML = `
+              <p style="margin-bottom:16px;">Review the 5 EOAs that will control the Safe:</p>
+              ${ownersHTML}
+              <button onclick="nextForgeStep()" style="width:100%;margin-top:20px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Continue to Threshold</button>
+            `;
+          } else if (step === 2) {
+            content.innerHTML = `
+              <p style="margin-bottom:12px;">Choose signing threshold (recommended 3-of-5):</p>
+              <select id="thresholdSelect" style="width:100%;padding:16px;background:#222;color:white;border:none;border-radius:12px;font-size:1.1rem;">
+                <option value="3" selected>3-of-5</option>
+                <option value="4">4-of-5</option>
+                <option value="5">5-of-5</option>
+              </select>
+              <button onclick="nextForgeStep()" style="width:100%;margin-top:20px;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Deploy Safe Multisig</button>
+            `;
+          } else if (step === 3) {
+            content.innerHTML = `
+              <p style="margin-bottom:20px;text-align:center;">Deploying Safe Multisig on Ethereum...</p>
+              <div style="height:8px;background:#222;border-radius:9999px;overflow:hidden;margin-bottom:20px;">
+                <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 2s linear;"></div>
+              </div>
+              <p style="text-align:center;color:#10b981;">Please wait...</p>
+            `;
+            setTimeout(() => {
+              document.getElementById('progressBar').style.width = '100%';
+              setTimeout(() => {
+                safeAddress = "0x" + Math.random().toString(16).substring(2, 42).toUpperCase();
+                forgeConfigs[selectedGroupentaId] = forgeConfigs[selectedGroupentaId] || {};
+                forgeConfigs[selectedGroupentaId].safeAddress = safeAddress;
+                localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
+                nextForgeStep();
+              }, 2200);
+            }, 100);
+          } else if (step === 4) {
+            content.innerHTML = `
+              <h3 style="margin-bottom:12px;color:#10b981;">✅ Safe Multisig Deployed!</h3>
+              <div style="background:#222;padding:20px;border-radius:12px;margin-bottom:24px;font-size:1.2rem;font-weight:700;text-align:center;letter-spacing:1px;">${safeAddress}</div>
+              <button onclick="nextForgeStep()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Connect to Unvest for Token Issuance</button>
+            `;
+          } else if (step === 5) {
+            content.innerHTML = `
+              <h3 style="margin-bottom:20px;color:#10b981;">🌟 Ready for Unvest Token Issuance</h3>
+              <p style="margin-bottom:24px;">The collective Safe wallet is now live and controlled by the 5 EOAs.</p>
+              <button onclick="closeModal()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">Complete &amp; Return to Dashboard</button>
+            `;
+          }
+        }
+
+        window.nextForgeStep = function() {
+          if (step === 2) {
+            threshold = parseInt(document.getElementById('thresholdSelect').value);
+          }
+          step++;
+          renderStep();
+        };
+
+        renderStep();
       } else {
         alert("Groupenta must have exactly 4 active members to generate Alpha ID or 5 members to complete the final forge.");
       }
@@ -1103,7 +1190,7 @@
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v3.0 – Forge Safe Multisig (5/5) now works correctly', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v3.1 – Realistic Safe + Unvest flow activated', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
