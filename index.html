@@ -177,8 +177,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v4.0 (Refined)
-      ================================================
+      STORY OF THIS CODE – FOUNDATION v4.0 (Corrected 4+1 Flow)
+      ========================================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -192,10 +192,13 @@
       - v3.1 : Realistic Safe Multisig + Unvest flow
       - v4.0 : Re-purposed Forge to Forge Initial Token using forge honey protocol tokenomics DNA (1 billion fixed supply, name, symbol, recipient address, full Solidity contract display, Sepolia Testnet, persistent contract address)
 
-      Latest refinement (this version):
-      - Recipient wallet address is now always clearly displayed in the success screen
-      - Added direct "Open in Remix & Deploy on Sepolia" button that opens Remix with the exact contract code pre-filled
-      - All previous matrices, Alpha ID logic, 5th member detection, and 12-gate functional check remain completely unchanged
+      Latest correction (this version):
+      - Classic 4+1 flow fully restored for Forge Initial Token:
+        • 4 members + 12 gates → button generates or shows persistent Alpha ID
+        • Alpha ID can be copied and assigned to a blueprint in Library
+        • When blueprint with matching Alpha ID is assigned to Groupenta → it becomes the 5th member
+        • Only with exactly 5 members + 12 gates → real Forge Initial Token flow unlocks
+      - All matrices, Alpha ID persistence, 5th member detection, and every other feature remain 100% intact
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -765,7 +768,6 @@
 
       const memberCount = activeDesigns.length;
       const all12GatesActivated = PENTA_GATES.every(g => allGates.has(g));
-      const isFunctionalForForge = (memberCount === 4) && all12GatesActivated;
 
       let dropdownOptions = groupentaIds.map(id => `<option value="${id}" ${id === selectedGroupentaId ? 'selected' : ''}>Groupenta #${id}</option>`).join('');
 
@@ -781,12 +783,13 @@
       }
 
       let forgeHtml = '';
-      if (isFunctionalForForge && !existingAlphaId) {
+
+      if (memberCount === 4 && all12GatesActivated && !existingAlphaId) {
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Forge Initial Token (Honey Protocol Tokenomics DNA)</h3>
-            <p style="margin-bottom:16px;color:#aaa;">Groupenta is Functional &amp; Ready (4 members + all 12 gates). Forge a new Initial Token with 1 billion fixed supply on Sepolia Testnet.</p>
-            <button onclick="forgeInitialToken()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 FORGE INITIAL TOKEN</button>
+            <p style="margin-bottom:16px;color:#aaa;">Groupenta is Functional &amp; Ready (4 members + all 12 gates). Generate Alpha ID for the 5th person.</p>
+            <button onclick="forgeSafeMultisig()" style="width:100%;padding:18px;background:#10b981;color:#000;font-size:1.1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">🔨 GENERATE ALPHA ID</button>
           </div>`;
       } else if (existingAlphaId && !fifthMember) {
         forgeHtml = `
@@ -797,7 +800,7 @@
             <button onclick="navigator.clipboard.writeText('${existingAlphaId}').then(()=>alert('Alpha ID copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:16px;">📋 Copy Alpha ID</button>
             <p style="color:#aaa;">Waiting for the 5th person to join using this Alpha ID.</p>
           </div>`;
-      } else if (existingAlphaId && fifthMember && !tokenName) {
+      } else if (existingAlphaId && fifthMember && memberCount === 5 && all12GatesActivated && !tokenName) {
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Forge Initial Token (Honey Protocol Tokenomics DNA)</h3>
@@ -834,7 +837,7 @@
         forgeHtml = `
           <div class="groupenta-matrix" style="background:#111;padding:20px;border-radius:12px;">
             <h3 style="margin:0 0 20px;color:var(--accent);">🔨 Forge Initial Token (Honey Protocol Tokenomics DNA)</h3>
-            <p style="color:#aaa;">Groupenta Not Functional<br>Requires exactly 4 active members AND all 12 penta gates collectively activated.</p>
+            <p style="color:#aaa;">Groupenta Not Functional<br>Requires exactly 4 active members AND all 12 penta gates collectively activated to generate Alpha ID, or 5 members to forge the token.</p>
           </div>`;
       }
 
@@ -1070,17 +1073,51 @@
       });
       html += `</tbody></table></div>
 
-        <!-- Forge Initial Token Layer -->
+        <!-- Forge Layer -->
         ${forgeHtml}`;
 
       container.innerHTML = html;
     }
 
+    // Generate Alpha ID (4 members)
+    window.forgeSafeMultisig = function() {
+      const activeMembers = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
+      if (activeMembers.length !== 4) {
+        alert("Groupenta must have exactly 4 active members to generate Alpha ID.");
+        return;
+      }
+
+      let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
+      let alphaId = forgeConfigs[selectedGroupentaId] ? forgeConfigs[selectedGroupentaId].alphaId : null;
+
+      if (!alphaId) {
+        alphaId = "ALPHA-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        forgeConfigs[selectedGroupentaId] = forgeConfigs[selectedGroupentaId] || {};
+        forgeConfigs[selectedGroupentaId].alphaId = alphaId;
+        localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
+      }
+
+      let modalHtml = `
+        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:3000;">
+          <div style="background:#141414;padding:30px;border-radius:20px;max-width:520px;width:90%;">
+            <h2 style="margin-bottom:20px;color:#10b981;">🔨 Alpha ID Generated for Groupenta #${selectedGroupentaId}</h2>
+            <p style="margin-bottom:16px;">Share this Alpha ID with the 5th member:</p>
+            <div style="background:#111;padding:16px;border-radius:12px;margin-bottom:24px;font-size:1.3rem;font-weight:700;text-align:center;letter-spacing:2px;">${alphaId}</div>
+            <button onclick="navigator.clipboard.writeText('${alphaId}').then(()=>alert('Alpha ID copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:16px;">📋 Copy Alpha ID</button>
+            <button onclick="closeModal()" style="width:100%;padding:14px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Close</button>
+          </div>
+        </div>
+      `;
+
+      const modal = document.createElement('div');
+      modal.innerHTML = modalHtml;
+      document.body.appendChild(modal);
+    };
+
+    // Forge Initial Token (only after 5 members)
     window.forgeInitialToken = function() {
       const activeMembers = savedDesigns.filter(d => d.groupentaId === selectedGroupentaId && d.approved && d.status === "ON");
-      const memberCount = activeMembers.length;
-
-      if (memberCount !== 5) {
+      if (activeMembers.length !== 5) {
         alert("Groupenta must have exactly 5 active members to forge the Initial Token.");
         return;
       }
@@ -1145,6 +1182,37 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
               <button onclick="nextForgeStep()" style="flex:1;padding:16px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Save &amp; Close</button>
             </div>
           `;
+        } else if (step === 3) {
+          const tokenName = (document.getElementById('tokenNameInput') && document.getElementById('tokenNameInput').value.trim()) || "Groupenta Honey";
+          const tokenSymbol = (document.getElementById('tokenSymbolInput') && document.getElementById('tokenSymbolInput').value.trim()) || "HONEY";
+          const recipientWallet = (document.getElementById('recipientWalletInput') && document.getElementById('recipientWalletInput').value.trim()) || "";
+
+          const contractAddress = "0x" + Math.random().toString(16).substring(2, 42).toUpperCase();
+
+          let forgeConfigs = JSON.parse(localStorage.getItem("hdForgeConfigs") || "{}");
+          forgeConfigs[selectedGroupentaId] = {
+            alphaId: currentConfig.alphaId,
+            tokenName: tokenName,
+            tokenSymbol: tokenSymbol,
+            recipientWallet: recipientWallet,
+            contractAddress: contractAddress,
+            supply: 1000000000,
+            forgedAt: new Date().toISOString()
+          };
+          localStorage.setItem("hdForgeConfigs", JSON.stringify(forgeConfigs));
+
+          content.innerHTML = `
+            <h3 style="margin-bottom:12px;color:#10b981;">✅ Initial Token Successfully Forged!</h3>
+            <div style="background:#222;padding:20px;border-radius:12px;margin-bottom:24px;">
+              <strong>Token Name:</strong> ${tokenName}<br>
+              <strong>Symbol:</strong> ${tokenSymbol}<br>
+              <strong>Fixed Supply:</strong> 1,000,000,000<br>
+              <strong>Contract Address:</strong> ${contractAddress}<br>
+              <strong>Recipient Wallet:</strong> ${recipientWallet}
+            </div>
+            <button onclick="navigator.clipboard.writeText('${contractAddress}').then(()=>alert('Contract address copied to clipboard'))" style="width:100%;padding:16px;background:#10b981;color:#000;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;">📋 Copy Contract Address</button>
+            <button onclick="closeModal()" style="width:100%;padding:14px;background:#222;color:#ddd;border:none;border-radius:12px;cursor:pointer;">Close &amp; Return to Dashboard</button>
+          `;
         }
       }
 
@@ -1166,7 +1234,7 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – Forge Initial Token with full Solidity contract + direct Remix deployment', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – 4+1 Alpha ID flow fully restored for Forge Initial Token', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
