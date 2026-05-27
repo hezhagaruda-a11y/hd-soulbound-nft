@@ -82,11 +82,36 @@
     .central-oval:hover { box-shadow: 0 0 30px rgba(16,185,129,0.9); transform: scale(1.08); }
     .arrow { font-size: 40px; color: #666; }
 
-    /* Matrix Tables */
-    .groupenta-matrix table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; margin-bottom: 40px; }
-    .groupenta-matrix th, .groupenta-matrix td { padding: 12px 14px; text-align: center; border-bottom: 1px solid #222; }
-    .groupenta-matrix th { background: #1a1a1a; color: var(--accent); font-weight: 600; }
-    .groupenta-matrix td:first-child { text-align: left; font-weight: 600; color: #ddd; }
+    /* Matrix Tables – FIXED: horizontal scroll to prevent overflow */
+    .groupenta-matrix { 
+      overflow-x: auto; 
+      margin-bottom: 40px; 
+      border-radius: 12px; 
+    }
+    .groupenta-matrix table { 
+      width: 100%; 
+      min-width: 1100px; 
+      border-collapse: collapse; 
+      background: #111; 
+      border-radius: 12px; 
+      overflow: hidden; 
+    }
+    .groupenta-matrix th, .groupenta-matrix td { 
+      padding: 10px 8px; 
+      text-align: center; 
+      border-bottom: 1px solid #222; 
+      font-size: 0.95rem; 
+    }
+    .groupenta-matrix th { 
+      background: #1a1a1a; 
+      color: var(--accent); 
+      font-weight: 600; 
+    }
+    .groupenta-matrix td:first-child { 
+      text-align: left; 
+      font-weight: 600; 
+      color: #ddd; 
+    }
     .checkmark { color: #10b981; font-size: 1.4rem; }
     .redx { color: #ef4444; font-size: 1.4rem; }
 
@@ -177,8 +202,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v4.0 (Corrected 4+1 Flow + Updated Matrix Labels)
-      =================================================================================
+      STORY OF THIS CODE – FOUNDATION v4.0 (Corrected 4+1 Flow + Updated Matrix Labels + Layout Fix)
+      ============================================================================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -195,6 +220,7 @@
       Latest correction (this version):
       - Classic 4+1 flow fully restored for Forge Initial Token
       - Matrix labels updated exactly as requested (15→Reliability, 5→Culture, etc.)
+      - Fixed layout overflow in matrices so all 12 green pillar circles are now visible
       - All other code, logic, functionality, and documentation remain 100% intact
     */
 
@@ -870,6 +896,17 @@
           </div>
         </div>
 
+        <div style="margin-top:60px;display:flex;justify-content:center;gap:100px;flex-wrap:wrap;">
+          <div class="pillar">
+            <div class="pillar-circle ${allGates.has(5) ? '' : 'red'}">Culture</div>
+            <div class="pillar-circle ${allGates.has(15) ? '' : 'red'}">Reliability</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-circle ${allGates.has(29) ? '' : 'red'}">Commitment</div>
+            <div class="pillar-circle ${allGates.has(46) ? '' : 'red'}">Coordination</div>
+          </div>
+        </div>
+
         <!-- Matrix 1: Check / Red X -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedGroupentaId}</h3>
@@ -1220,7 +1257,7 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – 4+1 Alpha ID flow fully restored + updated matrix labels', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – 4+1 Alpha ID flow fully restored + updated matrix labels + layout fix', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
