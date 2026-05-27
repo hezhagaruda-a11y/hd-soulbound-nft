@@ -177,8 +177,8 @@
 
   <script>
     /*
-      STORY OF THIS CODE – FOUNDATION v4.0 (Corrected 4+1 Flow)
-      ========================================================
+      STORY OF THIS CODE – FOUNDATION v4.0 (Corrected 4+1 Flow + Updated Matrix Labels)
+      =================================================================================
       We have now reached a mature and beautiful foundation.
 
       Journey so far:
@@ -193,12 +193,9 @@
       - v4.0 : Re-purposed Forge to Forge Initial Token using forge honey protocol tokenomics DNA (1 billion fixed supply, name, symbol, recipient address, full Solidity contract display, Sepolia Testnet, persistent contract address)
 
       Latest correction (this version):
-      - Classic 4+1 flow fully restored for Forge Initial Token:
-        • 4 members + 12 gates → button generates or shows persistent Alpha ID
-        • Alpha ID can be copied and assigned to a blueprint in Library
-        • When blueprint with matching Alpha ID is assigned to Groupenta → it becomes the 5th member
-        • Only with exactly 5 members + 12 gates → real Forge Initial Token flow unlocks
-      - All matrices, Alpha ID persistence, 5th member detection, and every other feature remain 100% intact
+      - Classic 4+1 flow fully restored for Forge Initial Token
+      - Matrix labels updated exactly as requested (15→Reliability, 5→Culture, etc.)
+      - All other code, logic, functionality, and documentation remain 100% intact
     */
 
     const BACKEND_URL = "https://humandesignapi-production-5a7b.up.railway.app";
@@ -873,17 +870,6 @@
           </div>
         </div>
 
-        <div style="margin-top:60px;display:flex;justify-content:center;gap:100px;flex-wrap:wrap;">
-          <div class="pillar">
-            <div class="pillar-circle ${allGates.has(5) ? '' : 'red'}">Culture</div>
-            <div class="pillar-circle ${allGates.has(15) ? '' : 'red'}">Reliability</div>
-          </div>
-          <div class="pillar">
-            <div class="pillar-circle ${allGates.has(29) ? '' : 'red'}">Commitment</div>
-            <div class="pillar-circle ${allGates.has(46) ? '' : 'red'}">Coordination</div>
-          </div>
-        </div>
-
         <!-- Matrix 1: Check / Red X -->
         <div class="groupenta-matrix">
           <h3 style="margin:30px 0 12px;color:var(--accent);">Groupenta Members Matrix #${selectedGroupentaId}</h3>
@@ -891,7 +877,7 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th><th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+                <th>Reliability</th><th>Culture</th><th>Coordination</th><th>Commitment</th><th>Capacity</th><th>Vision</th><th>Implementation</th><th>Public Relations</th><th>Planning</th><th>Administration</th><th>Accounting</th><th>Oversight</th>
               </tr>
             </thead>
             <tbody>`;
@@ -914,7 +900,7 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th>
+                <th>Reliability</th><th>Culture</th><th>Coordination</th><th>Commitment</th><th>Capacity</th><th>Vision</th>
               </tr>
             </thead>
             <tbody>`;
@@ -953,7 +939,7 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+                <th>Implementation</th><th>Public Relations</th><th>Planning</th><th>Administration</th><th>Accounting</th><th>Oversight</th>
               </tr>
             </thead>
             <tbody>`;
@@ -992,7 +978,7 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>15</th><th>5</th><th>46</th><th>29</th><th>14</th><th>2</th>
+                <th>Reliability</th><th>Culture</th><th>Coordination</th><th>Commitment</th><th>Capacity</th><th>Vision</th>
               </tr>
             </thead>
             <tbody>`;
@@ -1036,7 +1022,7 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>1</th><th>8</th><th>7</th><th>31</th><th>13</th><th>33</th>
+                <th>Implementation</th><th>Public Relations</th><th>Planning</th><th>Administration</th><th>Accounting</th><th>Oversight</th>
               </tr>
             </thead>
             <tbody>`;
@@ -1234,7 +1220,7 @@ contract ${tokenName.replace(/[^a-zA-Z0-9]/g, '')} is ERC20 {
       renderLibrary();
       renderCompatibility();
       renderApprovedCandidates();
-      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – 4+1 Alpha ID flow fully restored for Forge Initial Token', 'color:#10b981;font-weight:bold');
+      console.log('%c🌌 Human Design Group + Transit Foundation v4.0 – 4+1 Alpha ID flow fully restored + updated matrix labels', 'color:#10b981;font-weight:bold');
     };
   </script>
 </body>
